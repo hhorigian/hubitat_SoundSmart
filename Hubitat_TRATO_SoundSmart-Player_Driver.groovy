@@ -21,6 +21,8 @@ Change history:
 1.0.0 - @tomw - Initial release. Created and developed by tomw. 
 2.0.1 - @hhorigian - versão SoundSmart. Changed name to SoundSmart name for compatibility, added some customizationa and fixes for Brazil. 
 2.0.2 - added input buttons
+2.0.3 - 05/09/2024. Added attribute for input mode
+
 
 NOTE: this structure was copied from @tomw
 
@@ -51,6 +53,8 @@ metadata
         command "inputusb"
 
         attribute "commStatus", "string"
+        attribute "input", "string"
+
     }
 }
 
@@ -84,6 +88,7 @@ def initialize()
     logDebug("SoundSmart player initialize()")
     
     sendEvent(name: "commStatus", value: "unknown")
+    sendEvent(name: "input", value: "--")
     
     refresh()
     
@@ -750,4 +755,3 @@ def httpPOSTExec(URI)
     }
     
 }
-
