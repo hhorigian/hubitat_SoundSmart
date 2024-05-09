@@ -20,7 +20,7 @@ Change history:
 
 1.0.0 - @tomw - Initial release. Created and developed by tomw. 
 2.0.1 - @hhorigian - versão SoundSmart. Changed name to SoundSmart name for compatibility, added some customizationa and fixes for Brazil. 
-
+2.0.2 - added input buttons
 
 NOTE: this structure was copied from @tomw
 
@@ -37,10 +37,19 @@ metadata
         capability "Refresh"
         capability "SpeechSynthesis"
         capability "Switch"
+        capability "PushableButton"
+
+        
         //TODO: capability "AudioNotification"
         
         command "executeCommand", ["command"]
-        
+        command "inputhdmi" 
+        command "inputwifi"
+        command "inputoptical"
+        command "inputbluetooth"
+        command "inputaux"
+        command "inputusb"
+
         attribute "commStatus", "string"
     }
 }
@@ -50,6 +59,7 @@ preferences
     section
     {
         input "IP_address", "text", title: "IP address of SoundSmart", required: true
+        input "api_key_audio", "text",  title: "Audio CD Covers API Key ", required: false
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
     }
 }
@@ -138,6 +148,30 @@ def uninstalled()
     
     unschedule()
 }
+
+
+//Case para los botones de push en el dashboard. 
+def push(pushed) {
+	logDebug("push: button = ${pushed}")
+	if (pushed == null) {
+		logWarn("push: pushed is null.  Input ignored")
+		return
+	}
+	pushed = pushed.toInteger()
+	switch(pushed) {
+		case 1 : inputwifi(); break
+		case 2 : inputoptical(); break
+		case 3 : inputbluetooth(); break
+        case 4 : inputaux(); break
+        case 5 : inputusb(); break
+        case 6 : inputhdmi(); break        
+		default:
+			logDebug("push: Botão inválido.")
+			break
+	}
+}
+
+
 
 def play()
 {
@@ -348,6 +382,50 @@ def executeCommand(suffix)
     return httpGetExec(suffix)
 }
 
+
+def inputwifi()
+{
+    logDebug("SoundSmart player change to WiFi")    
+    executeCommand("setPlayerCmd:switchmode:wifi")
+    
+}
+
+def inputoptical()
+{
+    logDebug("SoundSmart player change to Optical")    
+    executeCommand("setPlayerCmd:switchmode:optical")
+    
+}
+
+def inputhdmi()
+{
+    logDebug("SoundSmart player change to HDMI")    
+    executeCommand("setPlayerCmd:switchmode:HDMI")
+    
+}
+
+def inputbluetooth()
+{
+    logDebug("SoundSmart player change to Bluetooth")    
+    executeCommand("setPlayerCmd:switchmode:bluetooth")
+    
+}
+
+
+def inputaux()
+{
+    logDebug("SoundSmart player change to Aux")    
+    executeCommand("setPlayerCmd:switchmode:line-in")
+    
+}
+
+def inputusb()
+{
+    logDebug("SoundSmart player change to USB")    
+    executeCommand("setPlayerCmd:switchmode:udisk")
+    
+}
+
 def getBaseURI()
 {
     return "http://" + IP_address + "/httpapi.asp?command="
@@ -536,7 +614,9 @@ def updateUriAndDesc(useCachedValues)
     
     {
         tmpTrackData = "SPOTIFY"
-        def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=f72ca3d6b5086f9991adbfb3c183912b&artist=" + tmpArtist + "&track=" + tmpTitle + "&autocorrect=1&format=json"    
+        def tempapi_key_audio = "f72ca3d6b5086f9991adbfb3c183912b"
+        //  settings.api_key_audio
+        def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&track=" + tmpTitle + "&autocorrect=1&format=json"    
     
         
         def coverfile2
