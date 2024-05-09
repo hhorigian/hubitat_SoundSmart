@@ -22,6 +22,7 @@ Change history:
 2.0.1 - @hhorigian - versão SoundSmart. Changed name to SoundSmart name for compatibility, added some customizationa and fixes for Brazil. 
 2.0.2 - added input buttons
 2.0.3 - 05/09/2024. Added attribute for input mode
+2.0.4 - 05/09/2024. Added table for cover arts
 
 
 NOTE: this structure was copied from @tomw
@@ -626,8 +627,10 @@ def updateUriAndDesc(useCachedValues)
         
         def coverfile2
         coverfile2 = httpPOSTExec(getcoverURI)
-        def tmpTrackDesc_temp = " ${hexToAscii(getPlayerStatus().Title)} | ${hexToAscii(getPlayerStatus().Artist)} "  
-        def imgfile = "<img src=" + state.AlbumCover + ">"
+        def tmpTrackDesc_temp = "<td> ${hexToAscii(getPlayerStatus().Title)}<br>${hexToAscii(getPlayerStatus().Artist)}</td></tr></table>"  
+        
+        
+        def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td><img src=" + state.AlbumCover + "></td>"
         tmpTrackDesc =  imgfile + tmpTrackDesc_temp
         sendEvent(name: "trackData", value: tmpTrackData)
         sendEvent(name: "trackDescription", value: tmpTrackDesc)
