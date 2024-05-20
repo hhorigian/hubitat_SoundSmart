@@ -1,0 +1,45 @@
+{
+ "packageName":"SoundSmart - Player",
+ "author":"Vartan Horigian",
+ "version":"1.0",
+ "minimumHEVersion":"2.3.7.100",
+ "dateReleased":"2024-05-20",
+ "releaseNotes":"first version pushed to HPM",
+ "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
+ "apps": [
+  {
+     "id":"60bbb92a-06ee-4ea3-97fd-45489d8caafc",
+     "name":"SoundSmart - Manager - Instance",
+     "namespace":"TRATO",
+     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager%20Instance_App.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  },
+  {
+     "id":"92d77a38-12cd-4258-8893-33a9380a9f07",
+     "name":"SoundSmart - Manager",
+     "namespace":"TRATO",
+     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_App.groovy",
+     "required":true,
+     "oauth":false,
+     "primary":true
+  }
+  ],
+ "drivers": [
+  {
+     "id":"440e9e56-125d-4bb9-ac52-764dd0e75fea",
+     "name":"SoundSmart - Player",
+     "namespace":"TRATO",
+     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/Player/Hubitat_TRATO_SoundSmart-Player_Driver.groovy",
+     "required":true
+  },
+  {
+     "id":"df809571-8b36-4536-8650-f32243195df4",
+     "name":"SoundSmart - Group",
+     "namespace":"TRATO",
+     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Group_Driver.groovy",
+     "required":true
+  }
+  ]
+}
