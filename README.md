@@ -39,3 +39,12 @@ a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas
         Botão 4 : inputaux   
         Botão 5 : inputusb  
         Botão 6 : inputhdmi    
+<br>
+<img src="https://images2.imgbox.com/98/9c/Xeb70KvD_o.png" alt="image host"/></a>        
+<br>
+a) Para adicionar os STATUS de "Playing/Stoped" e o "INPUT" atual seleccionado. 
+ Precisa adicionar um atributo do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo ATTRIBUTE. Adicionar um Tile para o Status, e outro Tile para o Input.
+<br>
+<img src="https://images2.imgbox.com/73/c7/20O5bZAO_o.png" alt="image host"/></a>
+
+
