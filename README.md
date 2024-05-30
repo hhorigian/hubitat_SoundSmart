@@ -2,7 +2,7 @@
 
 
 Esse é o driver para utilizar os produtos de Streaming da SoundSmart com Hubitat: SA20, SE10, SS50, WA60.
-No caso, esse é o driver + app, para utilizar 
+No caso, esse é o driver, para utilizar qualquer um deles. 
 
 
 # Instalação do Player 
@@ -15,7 +15,7 @@ No caso, esse é o driver + app, para utilizar
 
 <br>
 Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto nesse Hub Hubitat.
-
+<br>
 # Instalação do Modo Multi-Room  
 1. Instalar o APP: Hubitat_TRATO_SoundSmart-Manager_App.groovy em: Developer Tools, Apps Code, + New App.
 2. Instalar o APP: Hubitat_TRATO_SoundSmart-Manager Instance_App em: Developer Tools, Apps Code, + New App.
