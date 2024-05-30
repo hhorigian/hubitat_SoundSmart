@@ -27,13 +27,15 @@ Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto 
 <br>
 <b>Instalação no Dashboard </b> 
 
-
 1- Adicionar o SoundSmart (device) no dashboard.  
-2- Adicionar um TILE do tipo "Music Player" no dashboard.  
-3- Para adicionar os inputs de HDMI, Optico, Wifi, USB:  
+2- Adicionar um TILE do tipo "Music Player" no dashboard.   
 
-a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo: <br>
-		Botão 1 : inputwifi  
+</br>
+<b>Para adicionar os inputs de HDMI, Optico, Wifi, USB, et:  </b> <br> 
+a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo:
+
+
+		Botão 1 : inputwifi   
 		Botão 2 : inputoptica  
 		Botão 3 : inputbluetooth  
         Botão 4 : inputaux   
@@ -41,10 +43,36 @@ a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas
         Botão 6 : inputhdmi    
 <br>
 <img src="https://images2.imgbox.com/98/9c/Xeb70KvD_o.png" alt="image host"/></a>        
-<br>
-a) Para adicionar os STATUS de "Playing/Stoped" e o "INPUT" atual seleccionado. 
+<br><br>
+
+<b>Para adicionar os STATUS de "Playing/Stoped" e o "INPUT" atual seleccionado. </b><br>
  Precisa adicionar um atributo do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo ATTRIBUTE. Adicionar um Tile para o Status, e outro Tile para o Input.
-<br>
+<br><br>
+
 <img src="https://images2.imgbox.com/73/c7/20O5bZAO_o.png" alt="image host"/></a>
 
+<br><br>
 
+
+<b>Para adicionar um PRESET JÁ SALVO  anteriormente no WIIM no SoundSmart. </b> 
+<br> 
+ Cada PRESET é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo:
+<br>
+Presets: 
+
+        Botão 20 : preset1 
+        Botão 21 : preset2  
+        Botão 22 : preset3  
+        Botão 23 : preset4  
+        Botão 24 : preset5 
+        Botão 25 : preset6  
+        Botão 26 : preset7  
+        Botão 27 : preset8  
+        Botão 28 : preset9  
+        Botão 29 : preset10  
+<br><br>
+<b>Para Silenciar os Prompts do SoundSmart quando eles voltam de uma queda de Energia</b> <br> 
+Usar o setup do Device, o comando PUSH. Com as seguintes opções:
+
+       Push= Botão 35 : promptDisable 
+       Push= Botão 36 : promptEnable 

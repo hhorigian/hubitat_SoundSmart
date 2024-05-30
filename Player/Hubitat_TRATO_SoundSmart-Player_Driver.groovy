@@ -23,7 +23,9 @@ Change history:
 2.0.2 - added input buttons
 2.0.3 - 05/09/2024. Added attribute for input mode
 2.0.4 - 05/09/2024. Added table for cover arts
-
+2.0.5 - 05/30/2024. Added 10 Buttons for presets (buttons 20 to 29)
+                    Added Prompt Disable/Enable (buttons 35 and button 36)
+                    Added LastFM api default in Driver. 
 
 NOTE: this structure was copied from @tomw
 
@@ -64,7 +66,7 @@ preferences
     section
     {
         input "IP_address", "text", title: "IP address of SoundSmart", required: true
-        input "api_key_audio", "text",  title: "Audio CD Covers API Key ", required: false
+        input "api_key_audio", "text",  title: "Audio CD Covers API Key ", required: false, defaultValue: "f72ca3d6b5086f9991adbfb3c183912b"
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
     }
 }
@@ -170,7 +172,19 @@ def push(pushed) {
 		case 3 : inputbluetooth(); break
         case 4 : inputaux(); break
         case 5 : inputusb(); break
-        case 6 : inputhdmi(); break        
+        case 20 : preset1(); break
+        case 21 : preset2(); break
+        case 22 : preset3(); break
+        case 23 : preset4(); break
+        case 24 : preset5(); break
+        case 25 : preset6(); break
+        case 26 : preset7(); break
+        case 27 : preset8(); break
+        case 28 : preset9(); break
+        case 29 : preset10(); break  
+        case 35 : promptDisable(); break 
+        case 36 : promptEnable(); break                               
+
 		default:
 			logDebug("push: Botão inválido.")
 			break
@@ -388,6 +402,69 @@ def executeCommand(suffix)
     return httpGetExec(suffix)
 }
 
+
+def promptDisable(){
+     logDebug("SoundSmart player Prompt Disabled") 
+     executeCommand("PromptDisable")     
+}
+
+
+def promptEnable (){
+     logDebug("SoundSmart player Prompt Enabled") 
+     executeCommand("PromptEnable ")     
+}
+
+
+def preset1(){
+     logDebug("SoundSmart player preset 1 selected") 
+     executeCommand("MCUKeyShortClick:1")     
+}
+
+def preset2(){
+     logDebug("SoundSmart player preset 2 selected") 
+     executeCommand("MCUKeyShortClick:2")     
+}
+
+def preset3(){
+     logDebug("SoundSmart player preset 3 selected") 
+     executeCommand("MCUKeyShortClick:3")     
+}
+
+def preset4(){
+     logDebug("SoundSmart player preset 4 selected") 
+     executeCommand("MCUKeyShortClick:4")     
+}
+
+def preset5(){
+     logDebug("SoundSmart player preset 5 selected") 
+     executeCommand("MCUKeyShortClick:5")     
+}
+
+def preset6(){
+     logDebug("SoundSmart player preset 6 selected") 
+     executeCommand("MCUKeyShortClick:6")     
+}
+
+def preset7(){
+     logDebug("SoundSmart player preset 7 selected") 
+     executeCommand("MCUKeyShortClick:7")     
+}
+
+
+def preset8(){
+     logDebug("SoundSmart player preset 8 selected") 
+     executeCommand("MCUKeyShortClick:8")     
+}
+
+def preset9(){
+     logDebug("SoundSmart player preset 9 selected") 
+     executeCommand("MCUKeyShortClick:19")     
+}
+
+def preset10(){
+     logDebug("SoundSmart player preset 10 selected") 
+     executeCommand("MCUKeyShortClick:10")     
+}
 
 def inputwifi()
 {
