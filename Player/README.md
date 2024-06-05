@@ -1,3 +1,8 @@
+1. Precisa Colocar o IP Address do SoundSmart e Salvar Preferences. 
+2. Adicionar o SoundSmart para um DashBoard.
+3. Adicionar o SoundSmart no Dashboard como Music Player (para controles).
+4. Adicionar o SoundSmart no Dashboard como Botão (para mudar os inputs, usando os numero de botões na tabela abaixo). 
+   
 - Para adicionar os inputs de HDMI, Optico, Wifi, USB, etc:
 a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo:
 
