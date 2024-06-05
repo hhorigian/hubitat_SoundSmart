@@ -1,3 +1,5 @@
+<h1>**Configurações do SoundSmart Player**</h1>
+
 1. Precisa Colocar o IP Address do SoundSmart e Salvar Preferences. 
 2. Adicionar o SoundSmart para um DashBoard.
 3. Adicionar o SoundSmart no Dashboard como Music Player (para controles).
