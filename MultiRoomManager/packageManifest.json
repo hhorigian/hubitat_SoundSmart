@@ -8,19 +8,19 @@
    "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/blob/main/README.md",
    "apps": [
     {
-       "id":"17565289-f263-4a05-b4b8-30895ab71c98",
-       "name":"SoundSmart - Manager - Instance",
-       "namespace":"TRATO",
-       "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_Instance_App.groovy",
-       "required":true,
-       "oauth":false,
-       "primary":true
-    },
-    {
        "id":"b93e1752-474d-40ee-b6de-0e1e5f2e9d9b",
        "name":"SoundSmart - Manager ",
        "namespace":"TRATO",
        "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_App.groovy",
+       "required":true,
+       "oauth":false,
+       "primary":true
+    },
+        {
+       "id":"17565289-f263-4a05-b4b8-30895ab71c98",
+       "name":"SoundSmart - Manager - Instance",
+       "namespace":"TRATO",
+       "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_Instance_App.groovy",
        "required":true,
        "oauth":false,
        "primary":true
