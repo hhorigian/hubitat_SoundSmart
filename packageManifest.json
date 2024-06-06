@@ -1,31 +1,11 @@
 {
- "packageName":"SoundSmart - Player",
+ "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
  "version":"2.0.5",
  "minimumHEVersion":"2.3.7.100",
  "dateReleased":"2024-05-20",
  "releaseNotes":"Added Presets",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
- "apps": [
-  {
-     "id":"60bbb92a-06ee-4ea3-97fd-45489d8caafc",
-     "name":"SoundSmart - Manager - Instance",
-     "namespace":"TRATO",
-     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_Instance_App.groovy",
-     "required":true,
-     "oauth":false,
-     "primary":true
-  },
-  {
-     "id":"92d77a38-12cd-4258-8893-33a9380a9f07",
-     "name":"SoundSmart - Manager",
-     "namespace":"TRATO",
-     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_App.groovy",
-     "required":true,
-     "oauth":false,
-     "primary":true
-  }
-  ],
  "drivers": [
   {
      "id":"440e9e56-125d-4bb9-ac52-764dd0e75fea",
