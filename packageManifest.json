@@ -11,7 +11,7 @@
      "id":"60bbb92a-06ee-4ea3-97fd-45489d8caafc",
      "name":"SoundSmart - Manager - Instance",
      "namespace":"TRATO",
-     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager%20Instance_App.groovy",
+     "location":"https://raw.githubusercontent.com/hhorigian/hubitat_SoundSmart/main/MultiRoomManager/Hubitat_TRATO_SoundSmart-Manager_Instance_App.groovy",
      "required":true,
      "oauth":false,
      "primary":true
