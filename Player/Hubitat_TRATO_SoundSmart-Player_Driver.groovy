@@ -26,10 +26,12 @@ Change history:
 2.0.5 - 05/30/2024. Added 10 Buttons for presets (buttons 20 to 29)
                     Added Prompt Disable/Enable (buttons 35 and button 36)
                     Added LastFM api default in Driver. 
+2.0.6 - 06/05/2024  Added link to help in github
 
 NOTE: this structure was copied from @tomw
 
 */
+
 
 metadata
 {
@@ -61,6 +63,18 @@ metadata
     }
 }
 
+    import groovy.transform.Field
+    @Field static final String DRIVER = "by TRATO"
+    @Field static final String USER_GUIDE = "https://github.com/hhorigian/hubitat_SoundSmart/blob/main/Player/README.md"
+
+
+    String fmtHelpInfo(String str) {
+    String prefLink = "<a href='${USER_GUIDE}' target='_blank'>${str}<br><div style='font-size: 70%;'>${DRIVER}</div></a>"
+    return "<div style='font-size: 160%; font-style: bold; padding: 2px 0px; text-align: center;'>${prefLink}</div>"
+    }
+
+
+
 preferences
 {
     section
@@ -68,7 +82,12 @@ preferences
         input "IP_address", "text", title: "IP address of SoundSmart", required: true
         input "api_key_audio", "text",  title: "Audio CD Covers API Key ", required: false, defaultValue: "f72ca3d6b5086f9991adbfb3c183912b"
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
+        //help guide
+        input name: "UserGuide", type: "hidden", title: fmtHelpInfo("Manual do Driver") 
+
     }
+    
+    
 }
 
 def logDebug(msg) 
