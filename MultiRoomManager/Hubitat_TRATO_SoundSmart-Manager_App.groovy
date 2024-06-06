@@ -65,10 +65,10 @@ def installCheck() {
 	state.appInstalled = app.getInstallationState()
 	
 	if (state.appInstalled != 'COMPLETE') {
-		section{paragraph "Please hit 'Done' to install '${app.label}' parent app "}
+		section{paragraph "Click no  'Done' para instalar o '${app.label}' APP principal"}
   	}
   	else {
-    	log.info "Parent Installed OK"
+    	log.info "APP Principal Instalado OK"
   	}
 }
 
@@ -80,9 +80,9 @@ def mainPage()
 		
 		if (state.appInstalled == 'COMPLETE')
         {
-            section("<b>SoundSmart manager instances:</b>")
+            section("<b>Instâncias de SoundSmart Manager :</b>")
             {
-                app(name: "anyOpenApp", appName: "SoundSmart - Manager Instance", namespace: "TRATO", title: "<b>Adicionar um novo grupo SoundSmart</b>", multiple: true)
+                app(name: "anyOpenApp", appName: "SoundSmart - Manager Instance", namespace: "TRATO", title: "<b>Adicionar um novo Grupo de SoundSmart</b>", multiple: true)
 			}
 		}
 	}
