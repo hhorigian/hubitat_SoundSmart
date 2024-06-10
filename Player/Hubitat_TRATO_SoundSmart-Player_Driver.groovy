@@ -27,6 +27,7 @@ Change history:
                     Added Prompt Disable/Enable (buttons 35 and button 36)
                     Added LastFM api default in Driver. 
 2.0.6 - 06/05/2024  Added link to help in github
+2.0.7 - 10/05/2024  Added input status 10 = Radio Online
 
 NOTE: this structure was copied from @tomw
 
