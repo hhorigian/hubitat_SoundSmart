@@ -618,7 +618,10 @@ def updatePlayerStatus(useCachedValues)
     def tempInput = ""
     switch(resp_json.mode.toString())
     {
-        case "31":
+        case "10":
+            tempInput = "Radio Online"
+            break
+	case "31":
             tempInput = "Spotify"
             break
         case "40":
