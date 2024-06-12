@@ -28,4 +28,10 @@ Botão 25 : preset6
 Botão 26 : preset7    
 Botão 27 : preset8  
 Botão 28 : preset9  
-Botão 29 : preset10  
+Botão 29 : preset10 
+
+
+- Adicionar ATRIBUTOS no tile:
+
+- Status (Playing/Stoped)
+- Input Atual. 
