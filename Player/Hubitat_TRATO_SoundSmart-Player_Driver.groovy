@@ -28,6 +28,7 @@ Change history:
                     Added LastFM api default in Driver. 
 2.0.6 - 06/05/2024  Added link to help in github
 2.0.7 - 10/05/2024  Added input status 10 = Radio Online
+2.0.8 - 11/05/2024  Added input status 99 = MultiRoom
 
 NOTE: this structure was copied from @tomw
 
@@ -619,6 +620,9 @@ def updatePlayerStatus(useCachedValues)
     def tempInput = ""
     switch(resp_json.mode.toString())
     {
+        case "99":
+            tempInput = "MultiRoom"
+            break
         case "10":
             tempInput = "Radio Online"
             break
