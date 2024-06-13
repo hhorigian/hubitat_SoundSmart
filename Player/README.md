@@ -31,7 +31,6 @@ Botão 28 : preset9
 Botão 29 : preset10 
 
 
-- Adicionar ATRIBUTOS no tile:
-
-- Status (Playing/Stoped)
-- Input Atual. 
+Para adicionar no Dashboard, o STATUS (playing, Stoped) e o INPUT que está tocando:
+- Para o Status, adicionar um TILE no dashboard, usando o Device, e seleccionando o template "Attribute", e seleccionando o "Status".  
+- Para o Input Atual, adicionar um TILE no dashboard, usando o Device, e seleccionando o template "Attribute", e seleccionando o "input" na lista.   
