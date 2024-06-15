@@ -28,7 +28,8 @@ Change history:
                     Added LastFM api default in Driver. 
 2.0.6 - 06/06/2024  Added link to help in github
 2.0.7 - 10/06/2024  Added input status 10 = Radio Online
-2.0.8 - 15/06/2024  Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.  
+2.0.8 -             Added Status Multiroom
+2.0.9 - 15/06/2024  Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.  
 
 NOTE: this structure was copied from @tomw
 
