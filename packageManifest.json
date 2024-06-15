@@ -1,10 +1,10 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.0.8",
+ "version":"2.0.9",
  "minimumHEVersion":"2.3.7.100",
  "dateReleased":"2024-05-20",
- "releaseNotes":"Added Status MultiRoom",
+ "releaseNotes":"Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
