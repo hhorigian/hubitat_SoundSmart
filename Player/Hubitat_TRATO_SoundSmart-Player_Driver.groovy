@@ -26,9 +26,9 @@ Change history:
 2.0.5 - 05/30/2024. Added 10 Buttons for presets (buttons 20 to 29)
                     Added Prompt Disable/Enable (buttons 35 and button 36)
                     Added LastFM api default in Driver. 
-2.0.6 - 06/05/2024  Added link to help in github
-2.0.7 - 10/05/2024  Added input status 10 = Radio Online
-2.0.8 - 11/05/2024  Added input status 99 = MultiRoom
+2.0.6 - 06/06/2024  Added link to help in github
+2.0.7 - 10/06/2024  Added input status 10 = Radio Online
+2.0.8 - 15/06/2024  Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.  
 
 NOTE: this structure was copied from @tomw
 
@@ -60,7 +60,11 @@ metadata
         command "inputusb"
 
         attribute "commStatus", "string"
+        attribute "trackDescription", "string"
         attribute "input", "string"
+        attribute "volume", "integer"
+        attribute "numberOfButtons", "integer"
+
 
     }
 }
@@ -113,6 +117,9 @@ def initialize()
     
     sendEvent(name: "commStatus", value: "unknown")
     sendEvent(name: "input", value: "--")
+    sendEvent(name: "volume", value: 0)
+    sendEvent(name: "trackDescription", value: "--")   
+    sendEvent(name:"numberOfButtons", value:30)         
     
     refresh()
     
@@ -123,7 +130,9 @@ def initialize()
 def updated()
 {
     logDebug("SoundSmart player updated()")
-    
+    sendEvent(name: "volume", value: 0)
+    sendEvent(name: "trackDescription", value: "--")
+    sendEvent(name:"numberOfButtons", value:30)     
     configure()
 }
 
@@ -596,6 +605,7 @@ def updatePlayerStatus(useCachedValues)
     
     // update attributes
     sendEvent(name: "level", value: resp_json.vol.toInteger())
+    sendEvent(name: "volume", value: resp_json.vol.toInteger())
     sendEvent(name: "mute", value: (resp_json.mute.toInteger() ? "muted" : "unmuted"))
     
     def tempStatus = ""
@@ -620,9 +630,6 @@ def updatePlayerStatus(useCachedValues)
     def tempInput = ""
     switch(resp_json.mode.toString())
     {
-        case "99":
-            tempInput = "MultiRoom"
-            break
         case "10":
             tempInput = "Radio Online"
             break
@@ -668,7 +675,9 @@ def getPlayerStatus()
 
 def getCurrentVolumeLevel()
 {
+
     return getPlayerStatus().vol.toInteger()
+
 }
 
 def setVoicePromptsState()
@@ -735,6 +744,7 @@ def updateUriAndDesc(useCachedValues)
         
         
         def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td><img src=" + state.AlbumCover + "></td>"
+        //def imgfile = "<img src=" + state.AlbumCover + ">"
         tmpTrackDesc =  imgfile + tmpTrackDesc_temp
         sendEvent(name: "trackData", value: tmpTrackData)
         sendEvent(name: "trackDescription", value: tmpTrackDesc)
