@@ -30,6 +30,10 @@ Change history:
 2.0.7 - 10/06/2024  Added input status 10 = Radio Online
 2.0.8 -             Added Status Multiroom
 2.0.9 - 15/06/2024  Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.  
+2.1.0 - 21/06/2024  Fixed Cover Disk Images. Changed lastfm API, for albumgetinfo function usage. 
+
+
+
 
 NOTE: this structure was copied from @tomw
 
@@ -72,7 +76,7 @@ metadata
 
     import groovy.transform.Field
     @Field static final String DRIVER = "by TRATO"
-    @Field static final String USER_GUIDE = "https://github.com/hhorigian/hubitat_SoundSmart/blob/main/Player/README.md"
+    @Field static final String USER_GUIDE = "https://github.com/hhorigian/hubitat_SoundSmart/blob/main/Player"
 
 
     String fmtHelpInfo(String str) {
@@ -196,7 +200,7 @@ def push(pushed) {
 		logWarn("push: pushed is null.  Input ignored")
 		return
 	}
-	pushed = pushed.toInteger()
+	//pushed = pushed.toInteger()
 	switch(pushed) {
 		case 1 : inputwifi(); break
 		case 2 : inputoptical(); break
@@ -728,6 +732,8 @@ def updateUriAndDesc(useCachedValues)
     
     def tmpTitle = hexToAscii(getPlayerStatus().Title)
     def tmpArtist = hexToAscii(getPlayerStatus().Artist)
+    def tmpAlbum = hexToAscii(getPlayerStatus().Album)
+    
     
     //se a fonte é spotify e está tocando mando pegar o album  da música.
     if ((getPlayerStatus().mode == "31") && (getPlayerStatus().status == "play"))
@@ -736,9 +742,10 @@ def updateUriAndDesc(useCachedValues)
         tmpTrackData = "SPOTIFY"
         def tempapi_key_audio = "f72ca3d6b5086f9991adbfb3c183912b"
         //  settings.api_key_audio
-        def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&track=" + tmpTitle + "&autocorrect=1&format=json"    
-    
-        
+        //def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&track=" + tmpTitle + "&autocorrect=1&format=json"    
+        def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=album.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&album=" + tmpAlbum + "&autocorrect=1&format=json"    
+
+        log.debug "cover " + getcoverURI
         def coverfile2
         coverfile2 = httpPOSTExec(getcoverURI)
         def tmpTrackDesc_temp = "<td> ${hexToAscii(getPlayerStatus().Title)}<br>${hexToAscii(getPlayerStatus().Artist)}</td></tr></table>"  
@@ -858,7 +865,8 @@ def httpPOSTExec(URI)
                         def resp_json
                         def coverfile
                         resp_json = resp.data
-                        coverfile = resp_json.track.album.image[1]."#text"
+                        coverfile = resp_json.album.image[1]."#text"
+                        //coverfile = resp_json.track.album.image[1]."#text"
                         //log.info "CoverAlbum Filename " + coverfile 
                         state.AlbumCover = coverfile
                                   
