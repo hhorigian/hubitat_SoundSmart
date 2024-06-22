@@ -1,10 +1,10 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.0.9",
+ "version":"2.1.0",
  "minimumHEVersion":"2.3.7.100",
- "dateReleased":"2024-05-20",
- "releaseNotes":"Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.",
+ "dateReleased":"2024-06-22",
+ "releaseNotes":"Fixed Album Cover Images",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
