@@ -32,6 +32,8 @@ Change history:
 2.0.9 - 15/06/2024  Added numberOfButtons + trackdescription attributes for Easy Dashboards compatibility.  
 2.1.0 - 21/06/2024  Fixed Cover Disk Images. Changed lastfm API, for albumgetinfo function usage. 
 2.1.1 - 29/07/2024  Fixed "" in case buttons.  
+2.1.2 - 29/07/2024  Fixed case 3 "" in case buttons.  
+
 
 
 
@@ -204,8 +206,8 @@ def push(pushed) {
 	//pushed = pushed.toInteger()
 	switch(pushed) {
 		case "1" : inputwifi(); break
-		case "2 : inputoptical(); break
-		case "3 : inputbluetooth(); break
+		case "2" : inputoptical(); break
+		case "3" : inputbluetooth(); break
         case "4" : inputaux(); break
         case "5" : inputusb(); break
         case "20" : preset1(); break
