@@ -1,10 +1,10 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.1.2",
+ "version":"2.1.3",
  "minimumHEVersion":"2.3.7.100",
- "dateReleased":"2024-07-29",
- "releaseNotes":"Fixed case bug in apostrophes",
+ "dateReleased":"2024-08-16",
+ "releaseNotes":"Added Shuffle Mode buttons",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
