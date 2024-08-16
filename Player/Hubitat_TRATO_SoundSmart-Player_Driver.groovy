@@ -33,7 +33,7 @@ Change history:
 2.1.0 - 21/06/2024  Fixed Cover Disk Images. Changed lastfm API, for albumgetinfo function usage. 
 2.1.1 - 29/07/2024  Fixed "" in case buttons.  
 2.1.2 - 29/07/2024  Fixed case 3 "" in case buttons.  
-
+2.1.3 - 16/08/2024  Added Shuffle Modes as buttons. 
 
 
 
@@ -221,7 +221,11 @@ def push(pushed) {
         case "28" : preset9(); break
         case "29" : preset10(); break  
         case "35" : promptDisable(); break 
-        case "36" : promptEnable(); break                               
+        case "36" : promptEnable(); break   
+        case "37" : loopMode(0); break   
+        case "38" : loopMode(1); break   
+        case "39" : loopMode(2); break   
+        case "40" : loopMode(3); break   		
 
 		default:
 			logDebug("push: Botão inválido.")
@@ -440,6 +444,15 @@ def executeCommand(suffix)
     return httpGetExec(suffix)
 }
 
+def loopMode(loopmodevalue)
+{
+    logDebug("SoundSmart player change Loop (${loopmodevaluec})")
+    
+    if(httpGetExec("setPlayerCmd:loopmode:${loopmodevalue}"))
+    {
+        refresh()
+    }
+}
 
 def promptDisable(){
      logDebug("SoundSmart player Prompt Disabled") 
