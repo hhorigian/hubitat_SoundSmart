@@ -76,3 +76,12 @@ Usar o setup do Device, o comando PUSH. Com as seguintes opções:
 
        Push= Botão 35 : promptDisable 
        Push= Botão 36 : promptEnable 
+
+<b>Para Mudar o tipo de reprodução: Shuffle  </b> <br> 
+Comando PUSH. Com as seguintes opções:
+
+       Push= Botão 37 : Repeat all 
+       Push= Botão 38 : Repeat single track 
+       Push= Botão 39 : Shuffle, repeat 
+       Push= Botão 40 : Shuffle, no repeat
+       
