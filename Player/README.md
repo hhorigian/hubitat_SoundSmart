@@ -34,3 +34,11 @@ Botão 29 : preset10
 Para adicionar no Dashboard, o STATUS (playing, Stoped) e o INPUT que está tocando:
 - Para o Status, adicionar um TILE no dashboard, usando o Device, e seleccionando o template "Attribute", e seleccionando o "Status".  
 - Para o Input Atual, adicionar um TILE no dashboard, usando o Device, e seleccionando o template "Attribute", e seleccionando o "input" na lista.   
+
+<b>Para Mudar o tipo de reprodução: Shuffle  </b> <br> 
+Comando PUSH. Com as seguintes opções:
+
+       Push= Botão 37 : Repeat all 
+       Push= Botão 38 : Repeat single track 
+       Push= Botão 39 : Shuffle, repeat 
+       Push= Botão 40 : Shuffle, no repeat
