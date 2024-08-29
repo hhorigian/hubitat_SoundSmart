@@ -38,7 +38,7 @@ Para adicionar no Dashboard, o STATUS (playing, Stoped) e o INPUT que está toca
 <b>Para Mudar o tipo de reprodução: Shuffle  </b> <br> 
 Comando PUSH. Com as seguintes opções:
 
-   repeatall 
-   repeatsingle
-   shufflerepeat 
-   shufflenorepeat
+   repeatall  
+   repeatsingle  
+   shufflerepeat  
+   shufflenorepeat 
