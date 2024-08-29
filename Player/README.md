@@ -42,8 +42,3 @@ Comando PUSH. Com as seguintes opções:
    repeatsingle
    shufflerepeat 
    shufflenorepeat
-
-       Push= Botão 37 : Repeat all 
-       Push= Botão 38 : Repeat single track 
-       Push= Botão 39 : Shuffle, repeat 
-       Push= Botão 40 : Shuffle, no repeat
