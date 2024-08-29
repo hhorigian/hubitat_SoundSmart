@@ -34,6 +34,7 @@ Change history:
 2.1.1 - 29/07/2024  Fixed "" in case buttons.  
 2.1.2 - 29/07/2024  Fixed case 3 "" in case buttons.  
 2.1.3 - 16/08/2024  Added Shuffle Modes as buttons. 
+2.1.4 - 29/08/2024  New feature: Possible to send names in buttons instead of numbers in dashboard; ex: Button number: preset1. Will execute preset 1. Read.me for more instructions. 
 
 
 
@@ -66,6 +67,7 @@ metadata
         command "inputbluetooth"
         command "inputaux"
         command "inputusb"
+        command "push"
 
         attribute "commStatus", "string"
         attribute "trackDescription", "string"
@@ -228,7 +230,8 @@ def push(pushed) {
         case "40" : loopMode(3); break   		
 
 		default:
-			logDebug("push: Botão inválido.")
+			"${pushed}"()
+            //logDebug("push: Botão inválido.")
 			break
 	}
 }
@@ -444,6 +447,33 @@ def executeCommand(suffix)
     return httpGetExec(suffix)
 }
 
+
+def repeatall()
+{
+    logDebug("SoundSmart player Repeat All")
+    loopMode(0)
+}
+
+def repeatsingle()
+{
+    logDebug("SoundSmart player Repeat single track ")
+    loopMode(1)
+}
+
+def shufflerepeat()
+{
+    logDebug("SoundSmart player Shuffle Repeat ")
+    loopMode(2)
+}
+
+def shufflenorepeat()
+{
+    logDebug("SoundSmart player Shuffle No Repeat")
+    loopMode(3)
+}
+
+
+
 def loopMode(loopmodevalue)
 {
     logDebug("SoundSmart player change Loop (${loopmodevaluec})")
@@ -591,7 +621,7 @@ def updateStatusEx(useCachedValues)
 
 def setStatusEx(statusEx)
 {
-    logDebug("statusEx = ${statusEx}")
+    //logDebug("statusEx = ${statusEx}")
     
     state.StatusEx = statusEx
 }
@@ -684,7 +714,7 @@ def updatePlayerStatus(useCachedValues)
 
 def setPlayerStatus(playerStatus)
 {
-    logDebug("playerStatus = ${playerStatus}")
+    //logDebug("playerStatus = ${playerStatus}")
     
     state.PlayerStatus = playerStatus
 }
@@ -761,7 +791,7 @@ def updateUriAndDesc(useCachedValues)
         //def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&track=" + tmpTitle + "&autocorrect=1&format=json"    
         def getcoverURI = "http://ws.audioscrobbler.com/2.0/?method=album.getInfo&api_key=" + api_key_audio + "&artist=" + tmpArtist + "&album=" + tmpAlbum + "&autocorrect=1&format=json"    
 
-        log.debug "cover " + getcoverURI
+        //log.debug "cover " + getcoverURI
         def coverfile2
         coverfile2 = httpPOSTExec(getcoverURI)
         def tmpTrackDesc_temp = "<td> ${hexToAscii(getPlayerStatus().Title)}<br>${hexToAscii(getPlayerStatus().Artist)}</td></tr></table>"  
@@ -845,7 +875,7 @@ def parseJson(resp)
 
 def httpGetExec(suffix)
 {
-    logDebug("httpGetExec(${suffix})")
+    //logDebug("httpGetExec(${suffix})")
     
     try
     {
@@ -854,7 +884,7 @@ def httpGetExec(suffix)
         { resp ->
             if (resp.data)
             {
-                logDebug("resp.data = ${resp.data}")
+                //logDebug("resp.data = ${resp.data}")
                 return resp.data
             }
         }
