@@ -32,15 +32,15 @@ Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto 
 
 </br>
 <b>Para adicionar os inputs de HDMI, Optico, Wifi, USB, et:  </b> <br> 
-a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo:
+a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função (a partir da versão 2.1.4 do driver) de comando desejado + PUSH. Sendo as funções disponíveis respeitando minusculas e maiusculas:
 
 
-		Botão 1 : inputwifi   
-		Botão 2 : inputoptica  
-		Botão 3 : inputbluetooth  
-        Botão 4 : inputaux   
-        Botão 5 : inputusb  
-        Botão 6 : inputhdmi    
+	inputwifi   
+	inputoptica  
+	inputbluetooth  
+        inputaux   
+        inputusb  
+        inputhdmi    
 <br>
 <img src="https://images2.imgbox.com/98/9c/Xeb70KvD_o.png" alt="image host"/></a>        
 <br><br>
@@ -56,32 +56,46 @@ a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas
 
 <b>Para adicionar um PRESET JÁ SALVO  anteriormente no WIIM no SoundSmart. </b> 
 <br> 
- Cada PRESET é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o numero de comando desejado + PUSH. Sendo:
+ Cada PRESET é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função (a partir da versão 2.1.4 do driver) de comando desejado + PUSH. Sendo:
 <br>
 Presets: 
 
-        Botão 20 : preset1 
-        Botão 21 : preset2  
-        Botão 22 : preset3  
-        Botão 23 : preset4  
-        Botão 24 : preset5 
-        Botão 25 : preset6  
-        Botão 26 : preset7  
-        Botão 27 : preset8  
-        Botão 28 : preset9  
-        Botão 29 : preset10  
+        preset1 
+        preset2  
+        preset3  
+        preset4  
+        preset5 
+        preset6  
+        preset7  
+        preset8  
+        preset9  
+        preset10  
 <br><br>
 <b>Para Silenciar os Prompts do SoundSmart quando eles voltam de uma queda de Energia</b> <br> 
 Usar o setup do Device, o comando PUSH. Com as seguintes opções:
 
-       Push= Botão 35 : promptDisable 
-       Push= Botão 36 : promptEnable 
+       promptDisable 
+       promptEnable 
 
 <b>Para Mudar o tipo de reprodução: Shuffle  </b> <br> 
 Comando PUSH. Com as seguintes opções:
 
-       Push= Botão 37 : Repeat all 
-       Push= Botão 38 : Repeat single track 
-       Push= Botão 39 : Shuffle, repeat 
-       Push= Botão 40 : Shuffle, no repeat
+       repeatall 
+       repeatsingle
+       shufflerepeat 
+       shufflenorepeat
+       
+
+<b>É possível a partir da versão 2.1.4 do driver, enviar qualquer comando usando o botão + PUSH + nome da função. Aqui as funções disponíveis:  </b> <br> 
+
+       play 
+       pause
+       stop 
+       nextTrack
+       previousTrack
+       volumeDown
+       volumeUp
+       mute
+       unmute
+       resume
        
