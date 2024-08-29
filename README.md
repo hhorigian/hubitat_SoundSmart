@@ -32,7 +32,7 @@ Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto 
 
 </br>
 <b>Para adicionar os inputs de HDMI, Optico, Wifi, USB, et:  </b> <br> 
-a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função (a partir da versão 2.1.4 do driver) de comando desejado + PUSH. Sendo as funções disponíveis respeitando minusculas e maiusculas:
+a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função desejada + PUSH.(a partir da versão 2.1.4 do driver).  Sendo as funções disponíveis respeitando minusculas e maiusculas:
 
 
 	inputwifi   
@@ -56,7 +56,7 @@ a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas
 
 <b>Para adicionar um PRESET JÁ SALVO  anteriormente no WIIM no SoundSmart. </b> 
 <br> 
- Cada PRESET é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função (a partir da versão 2.1.4 do driver) de comando desejado + PUSH. Sendo:
+ Cada PRESET é um botão do SoundSmart (Device). Adicionando um tile novo, mas no caso do tipo BUTTON, e o nome da função desejada + PUSH(a partir da versão 2.1.4 do driver) . Sendo:
 <br>
 Presets: 
 
