@@ -35,8 +35,7 @@ Change history:
 2.1.2 - 29/07/2024  Fixed case 3 "" in case buttons.  
 2.1.3 - 16/08/2024  Added Shuffle Modes as buttons. 
 2.1.4 - 29/08/2024  New feature: Possible to send names in buttons instead of numbers in dashboard; ex: Button number: preset1. Will execute preset 1. Read.me for more instructions. 
-
-
+2.1.5 - 07/09/2024  Added Attributes LargeImage, URLImage
 
 
 NOTE: this structure was copied from @tomw
@@ -74,6 +73,10 @@ metadata
         attribute "input", "string"
         attribute "volume", "integer"
         attribute "numberOfButtons", "integer"
+		attribute "URLLargeCoverFile", "string"
+		attribute "ImageLargeCover", "string"		
+		attribute "ImageLargeCover", "string"		
+        attribute "trackname", "string"
 
 
     }
@@ -334,14 +337,14 @@ def volumeDown()
 {
     logDebug("SoundSmart player volumeDown()")
     
-    setLevel(getCurrentVolumeLevel() - 10)
+    setLevel(getCurrentVolumeLevel() - 5)
 }
 
 def volumeUp()
 {
     logDebug("SoundSmart player volumeUp()")
     
-    setLevel(getCurrentVolumeLevel() + 10)
+    setLevel(getCurrentVolumeLevel() + 5)
 }
 
 def nextTrack()
@@ -794,14 +797,24 @@ def updateUriAndDesc(useCachedValues)
         //log.debug "cover " + getcoverURI
         def coverfile2
         coverfile2 = httpPOSTExec(getcoverURI)
+        coverfileLarge = httpPOSTExecLarge(getcoverURI)
+		
         def tmpTrackDesc_temp = "<td> ${hexToAscii(getPlayerStatus().Title)}<br>${hexToAscii(getPlayerStatus().Artist)}</td></tr></table>"  
+        def tmpTrackName = "<td> ${hexToAscii(getPlayerStatus().Title)}-${hexToAscii(getPlayerStatus().Artist)}</td></tr></table>"  
         
         
-        def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td><img src=" + state.AlbumCover + "></td>"
-        //def imgfile = "<img src=" + state.AlbumCover + ">"
+        def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td><img src=" + state.SmallAlbumCover + "></td>"
+        def imgfileLarge = "<img src=" + state.LargeAlbumCover + " style=width:365px;>"
+
+		//def imgfile = "<img src=" + state.AlbumCover + ">"
         tmpTrackDesc =  imgfile + tmpTrackDesc_temp
+		tmpURLLargeCover = state.LargeAlbumCover
+		tmpLargeCoverImg = imgfileLarge
         sendEvent(name: "trackData", value: tmpTrackData)
         sendEvent(name: "trackDescription", value: tmpTrackDesc)
+        sendEvent(name: "trackname", value: tmpTrackName)        
+		sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
+		sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
         
     } else
     {
@@ -914,7 +927,39 @@ def httpPOSTExec(URI)
                         coverfile = resp_json.album.image[1]."#text"
                         //coverfile = resp_json.track.album.image[1]."#text"
                         //log.info "CoverAlbum Filename " + coverfile 
-                        state.AlbumCover = coverfile
+                        state.SmallAlbumCover = coverfile
+                                  
+            }
+        }
+    }
+                            
+
+    catch (Exception e)
+    {
+        logDebug("httpPostExec() failed: ${e.message}")
+    }
+    
+}
+
+def httpPOSTExecLarge(URI)
+{
+    
+    try
+    {
+        getString = URI
+        segundo = ""
+        httpPostJson(getString.replaceAll(' ', '%20'),segundo,  )
+        { resp ->
+            if (resp.data)
+            {
+                       
+                        def resp_json
+                        def coverfile
+                        resp_json = resp.data
+                        coverfile = resp_json.album.image[4]."#text"
+                        //coverfile = resp_json.track.album.image[1]."#text"
+                        //log.info "CoverAlbum Filename " + coverfile 
+                        state.LargeAlbumCover = coverfile
                                   
             }
         }
