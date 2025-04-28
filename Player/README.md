@@ -72,7 +72,8 @@ Presets:
         preset10  
 <br><br>
 Ainda para o Rule Machine precisa usar o numero de botão: 
-          "20" : preset1();  
+
+	  "20" : preset1();  
           "21" : preset2();  
           "22" : preset3();  
           "23" : preset4();  
@@ -80,7 +81,7 @@ Ainda para o Rule Machine precisa usar o numero de botão:
           "25" : preset6();  
           "26" : preset7();  
           "27" : preset8();  	  
-          "28" : preset9();   	
+          "28" : preset9();  	  
           "29" : preset10();  	  
 <br><br>	  
 <b>Para Silenciar os Prompts do SoundSmart quando eles voltam de uma queda de Energia</b> <br> 
