@@ -32,6 +32,16 @@ a) Cada input é um botão do SoundSmart (Device). Adicionando um tile novo, mas
          inputusb  
          inputhdmi    
 <br>
+Ainda para o Rule Machine precisa usar o numero de botão: 
+<br> 
+
+	  "1" : inputwifi();   
+	  "2" : inputoptical();   
+	  "3" : inputbluetooth() ;   
+          "4" : inputaux();   
+          "5" : inputusb();   
+
+ <br>
 <img src="https://images2.imgbox.com/98/9c/Xeb70KvD_o.png" alt="image host"/></a>        
 <br><br>
 
@@ -61,6 +71,18 @@ Presets:
         preset9  
         preset10  
 <br><br>
+Ainda para o Rule Machine precisa usar o numero de botão: 
+          "20" : preset1();  
+          "21" : preset2();  
+          "22" : preset3();  
+          "23" : preset4();  
+          "24" : preset5();  
+          "25" : preset6();  
+          "26" : preset7();  
+          "27" : preset8();  	  
+          "28" : preset9();   	
+          "29" : preset10();  	  
+<br><br>	  
 <b>Para Silenciar os Prompts do SoundSmart quando eles voltam de uma queda de Energia</b> <br> 
 Usar o setup do Device, o comando PUSH. Com as seguintes opções:
 
