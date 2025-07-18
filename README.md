@@ -18,14 +18,14 @@ Esses drivers estão disponiveis no Hubitat Package Manager (HPM)
 Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto nesse Hub Hubitat.
 <br>
 <br>
-# Instalação do Modo Multi-Room  (Manual) 
+**Instalação do Modo Multi-Room  (Manual)**
 
 1. Instalar o APP: Hubitat_TRATO_SoundSmart-Manager_App.groovy em: Developer Tools, Apps Code, + New App.  
 3. Instalar o APP: Hubitat_TRATO_SoundSmart-Manager Instance_App em: Developer Tools, Apps Code, + New App. 
 4. Instalar o APP SoundSmart-Manager na seção APPS, indo em Apps - > Add User app -> e procurar o SoundSmart Manager  
 <img src="https://images2.imgbox.com/b1/4c/KCLLluZ6_o.jpg" alt="image host"/></a>
 
-6. Entrar em   -> "Devices", procurar o "SoundSmart Manager" e entrar em ele, para assim criar um novo grupo multi-room.
+6. Entrar em   -> "APP", procurar o "SoundSmart Manager" e entrar em ele, para assim criar um novo grupo multi-room.
    
 8. Uma vez dentro do SoundSmart Manager, pesquisar os devices na rede, e seleccionar qual vai ser o "Master", e quais serão os "Slaves" do grupo. Criar um nome para o novo grupo criado para que possa ser identificado. Serão criado novos dispositivos virtuais para acessar e controlar o grupo.
    
