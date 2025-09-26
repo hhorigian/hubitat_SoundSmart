@@ -20,6 +20,7 @@ Change history:
 
 1.0.0 - @tomw - Initial release.
 2.0.0 - @hhorigian - Versão para BR. SoundSmart. 
+2.0.1 - @hhorigian - fixed device driver name.
 
 NOTE: this structure was copied from @tomw
 
@@ -131,7 +132,8 @@ def installed()
     if(!(retainExistingDevices && child))
     {
         // create group device
-        child = addChildDevice("TRATO", "SoundSmart - Manager", getGroupName(), [isComponent: true, name: getGroupName(), label: getGroupName()])
+        child = addChildDevice("TRATO", "SoundSmart - Group", getGroupName(), [isComponent: true, name: getGroupName(), label: getGroupName()])
+        log.debug "child = " + child
     }
     
     if(child)
