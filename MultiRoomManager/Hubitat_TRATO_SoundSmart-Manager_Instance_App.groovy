@@ -20,7 +20,7 @@ Change history:
 
 1.0.0 - @tomw - Initial release.
 2.0.0 - @hhorigian - Versão para BR. SoundSmart. 
-2.0.1 - @hhorigian - fixed device driver name.
+2.1   - @hhorigian - fixed device driver name.
 
 NOTE: this structure was copied from @tomw
 
