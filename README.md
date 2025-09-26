@@ -27,7 +27,9 @@ Repetir esse procedimento para todos os SoundSmart player que tenha no projeeto 
 
 6. Entrar em   -> "APP", procurar o "SoundSmart Manager" e entrar em ele, para assim criar um novo grupo multi-room.
    
-8. Uma vez dentro do SoundSmart Manager, pesquisar os devices na rede, e seleccionar qual vai ser o "Master", e quais serão os "Slaves" do grupo. Criar um nome para o novo grupo criado para que possa ser identificado. Serão criado novos dispositivos virtuais para acessar e controlar o grupo.
+8. Uma vez dentro do SoundSmart Manager, pesquisar os devices na rede, e seleccionar qual vai ser o "Master", e quais serão os "Slaves" do grupo. Criar um nome para o novo grupo criado para que possa ser identificado. Será criado um novo DEVICE, com o nome do grupo e childs dentro dele.
+9. Esse novo device, tem o master control das musicas, pause, volume.
+10. O grupo só fica ativo, quando enviado um comando PUSH = 1. Nesse momento o grupo se forma. Para separar o grupo, é só enviar um PUSH = 0. Isso pode ser feito via dashboard fazendo um push, ou se preferir uma regra para ligar/desligar o grupo usando um virtual switch. 
    
 
 <br>
@@ -105,3 +107,4 @@ Comando PUSH. Com as seguintes opções:
        unmute
        resume
        
+
