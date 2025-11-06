@@ -1,11 +1,13 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.1.4",
+ "version":"2.1.6",
  "minimumHEVersion":"2.3.7.100",
- "dateReleased":"2024-08-29",
- "releaseNotes":"2.1.4 - 29/08/2024  New feature: Possible to send names in buttons instead of numbers in dashboard; ex: Button number: preset1. Will execute preset 1. Read.me for more instructions. 
-",
+ "dateReleased":"2025-11-05",
+ "releaseNotes":" - Added  Buttons as Child Devices using Recreate Buttons. Buttons shown as Switch, easier for dashboard use. 
+					- Changed to use asynchttp for some functions
+					- Added display for Radio Station names when playing input from Streaming Radio Stations. 
+					- Added debug logs auto turn off. ",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
