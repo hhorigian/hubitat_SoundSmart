@@ -36,6 +36,11 @@ Change history:
 2.1.3 - 16/08/2024  Added Shuffle Modes as buttons. 
 2.1.4 - 29/08/2024  New feature: Possible to send names in buttons instead of numbers in dashboard; ex: Button number: preset1. Will execute preset 1. Read.me for more instructions. 
 2.1.5 - 07/09/2024  Added Attributes LargeImage, URLImage
+2.1.6 - 05/11/2025  - Added  Buttons as Child Devices using Recreate Buttons. Buttons shown as Switch, easier for dashboard use. 
+					- Changed to use asynchttp for some functions
+					- Added display for Radio Station names when playing input from Streaming Radio Stations. 
+					- Added debug logs auto turn off. 
+
 
 
 NOTE: this structure was copied from @tomw
@@ -67,7 +72,9 @@ metadata
         command "inputaux"
         command "inputusb"
         command "push"
-
+        command "recreateChilds"
+        command "removeChilds"
+        
         attribute "commStatus", "string"
         attribute "trackDescription", "string"
         attribute "input", "string"
@@ -103,6 +110,8 @@ preferences
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         //help guide
         input name: "UserGuide", type: "hidden", title: fmtHelpInfo("Manual do Driver") 
+        input name: "createButtonsOnSave", type: "bool", title: "Criar/atualizar Child Switches para botões ao salvar", defaultValue: false
+        
 
     }
     
@@ -122,6 +131,8 @@ def installed()
     logDebug("SoundSmart player installed()")
     
     initialize()
+    scheduleDebugAutoOff()
+
 }
 
 def initialize()
@@ -138,6 +149,8 @@ def initialize()
     
     // set voice prompts behavior based on debugging state
     setVoicePromptsState()
+    scheduleDebugAutoOff()
+
 }
 
 def updated()
@@ -147,6 +160,12 @@ def updated()
     sendEvent(name: "trackDescription", value: "--")
     sendEvent(name:"numberOfButtons", value:30)     
     configure()
+    if (createButtonsOnSave) {
+        createOrUpdateChildButtons(true)
+    }
+    scheduleDebugAutoOff()
+
+    
 }
 
 def configure()
@@ -192,7 +211,6 @@ def refresh(useCachedValues)
 
 
 
-
 def uninstalled()
 {
     logDebug("SoundSmart player uninstalled()")
@@ -203,9 +221,9 @@ def uninstalled()
 
 //Case para los botones de push en el dashboard. 
 def push(pushed) {
-	logDebug("push: button = ${pushed}")
+	log.debug("push: button = ${pushed}")
 	if (pushed == null) {
-		logWarn("push: pushed is null.  Input ignored")
+		log.warn ("push: pushed is null.  Input ignored")
 		return
 	}
 	//pushed = pushed.toInteger()
@@ -816,7 +834,42 @@ def updateUriAndDesc(useCachedValues)
 		sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
 		sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
         
-    } else
+    } 
+    // se a fonte é Radio Online (mode 10), mostra o nome da rádio e zera capas anteriores
+	else if (getPlayerStatus()?.mode == "10") {
+    // tenta pegar um nome útil da própria resposta do player
+    def rTitle  = safeHexToAscii(getPlayerStatus()?.Title)
+    def rArtist = safeHexToAscii(getPlayerStatus()?.Artist)
+    def rAlbum  = safeHexToAscii(getPlayerStatus()?.Album)
+
+    // tenta também no StatusEx (alguns firmwares expõem "StationName", "Station" ou "Title")
+    def st = getStatusEx()
+    def sxStation = st?.StationName ?: st?.Station ?: st?.Title ?: st?.RadioName
+
+    // escolhe a melhor fonte disponível
+    def station = [rTitle, rArtist, rAlbum, sxStation].find { it && it.trim() } ?: "Rádio Online"
+
+    tmpTrackData = "RADIO"
+    def tmpTrackDesc_temp = "<td>${station}</td></tr></table>"
+    def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td></td>"
+    def imgfileLarge = ""
+
+    tmpTrackDesc = imgfile + tmpTrackDesc_temp
+    tmpURLLargeCover = ""
+    tmpLargeCoverImg = ""
+
+    sendEvent(name: "trackData", value: tmpTrackData)
+    sendEvent(name: "trackDescription", value: tmpTrackDesc)
+    sendEvent(name: "trackname", value: "<td>${station}</td></tr></table>")
+    sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
+    sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
+
+    return // evita cair na lógica padrão que colocaria "N/A" e manteria capa anterior
+	}
+
+    
+    
+    else
     {
         tmpTrackData = "N/A"
     
@@ -824,6 +877,16 @@ def updateUriAndDesc(useCachedValues)
     
     
 }
+
+
+private String safeHexToAscii(Object hexStr) {
+    try {
+        return (hexStr ? hexToAscii(hexStr as String) : "") ?: ""
+    } catch (ignored) {
+        return ""
+    }
+}
+
 
 
 def updateIP(ip)
@@ -886,27 +949,35 @@ def parseJson(resp)
 }
      
 
-def httpGetExec(suffix)
-{
-    //logDebug("httpGetExec(${suffix})")
-    
-    try
-    {
-        getString = getBaseURI() + suffix
-        httpGet(getString.replaceAll(' ', '%20'))
-        { resp ->
-            if (resp.data)
-            {
-                //logDebug("resp.data = ${resp.data}")
-                return resp.data
+def httpGetExec(suffix) {
+    try {
+        String url = (getBaseURI() + suffix).replaceAll(' ', '%20')
+
+        // Mantém síncrono para consultas (getStatusEx, getPlayerStatus, etc.)
+        if (suffix?.toLowerCase()?.startsWith("get")) {
+            def ret = null         
+            logDebug("URL no httpget = " + url)
+            
+            httpGet(url) { resp ->
+                if (resp?.data) ret = resp.data?.toString()
             }
+            return ret
         }
+
+        // Usa ASYNC para COMANDOS (melhorando latência e não bloqueando o thread do driver)
+        Map params = [ uri: url, timeout: 7 ]
+        asynchttpGet('httpCmdGetCallback', params, [suffix: suffix])
+
+        // Retorna "true" para manter compatibilidade com trechos do tipo: if(httpGetExec(...)) { refresh() }
+            logDebug("URL no ASYNChttpget = " + url)
+        return true
     }
-    catch (Exception e)
-    {
+    catch (Exception e) {
         logDebug("httpGetExec() failed: ${e.message}")
+        return null
     }
 }
+
 
 
 def httpPOSTExec(URI)
@@ -972,3 +1043,194 @@ def httpPOSTExecLarge(URI)
     }
     
 }
+
+void httpCmdGetCallback(resp, data) {
+    Integer st = null
+    try { st = resp?.status as Integer } catch (ignored) {}
+
+    String suf = data?.suffix ?: ""
+    if (st && st >= 200 && st < 300) {
+        if (logEnable) log.debug "HTTP CMD OK (${st}) -> ${suf}"
+        // Opcional: se quiser forçar um refresh após qualquer comando, descomente:
+        // refresh()
+    } else {
+        log.warn "HTTP CMD FAIL (status=${st}) -> ${suf}"
+    }
+}
+
+
+// --- CHILD SWITCHES: DEFINIÇÕES ---
+@Field static final List<Map> SS_CHILD_BUTTON_DEFS = [
+  // Inputs
+  [label:"SS - Input WiFi",         handler:"inputwifi"],
+  [label:"SS - Input Optical",      handler:"inputoptical"],
+  [label:"SS - Input Bluetooth",    handler:"inputbluetooth"],
+  [label:"SS - Input Aux",          handler:"inputaux"],
+  [label:"SS - Input USB",          handler:"inputusb"],
+  [label:"SS - Input HDMI",         handler:"inputhdmi"],
+
+  // Volume e transporte
+  [label:"SS - Volume Up",          handler:"volumeUp"],
+  [label:"SS - Volume Down",        handler:"volumeDown"],
+  [label:"SS - Play/Resume",        handler:"play"],
+  [label:"SS - Pause",              handler:"pause"],
+  [label:"SS - Stop",               handler:"stop"],
+  [label:"SS - Next Track",         handler:"nextTrack"],
+  [label:"SS - Previous Track",     handler:"previousTrack"],
+  [label:"SS - Mute",               handler:"mute"],
+  [label:"SS - Unmute",             handler:"unmute"],
+
+  // Presets 1..10
+  [label:"SS - Preset 1",           handler:"preset1"],
+  [label:"SS - Preset 2",           handler:"preset2"],
+  [label:"SS - Preset 3",           handler:"preset3"],
+  [label:"SS - Preset 4",           handler:"preset4"],
+  [label:"SS - Preset 5",           handler:"preset5"],
+  [label:"SS - Preset 6",           handler:"preset6"],
+  [label:"SS - Preset 7",           handler:"preset7"],
+  [label:"SS - Preset 8",           handler:"preset8"],
+  [label:"SS - Preset 9",           handler:"preset9"],
+  [label:"SS - Preset 10",          handler:"preset10"],
+
+  // Prompts
+  [label:"SS - Prompt Disable",     handler:"promptDisable"],
+  [label:"SS - Prompt Enable",      handler:"promptEnable"],
+
+  // Loop/Shuffle
+  [label:"SS - Repeat All",         handler:"repeatall"],
+  [label:"SS - Repeat Single",      handler:"repeatsingle"],
+  [label:"SS - Shuffle Repeat",     handler:"shufflerepeat"],
+  [label:"SS - Shuffle No Repeat",  handler:"shufflenorepeat"]
+]
+
+// Botões no UI
+def recreateChilds() { createOrUpdateChildButtons(true) }
+def removeChilds()  { removeChildButtons() }
+
+private void createOrUpdateChildButtons(Boolean removeExtras=false) {
+  log.warn "Criando/atualizando Child Switches para botões do SoundSmart..."
+
+  // >>> Sem filtro por métodos; cria todos os definidos
+  List<Map> defs = SS_CHILD_BUTTON_DEFS
+  log.warn "Childs planejados: ${defs.size()}"
+
+  Set<String> keep = [] as Set
+  defs.eachWithIndex { m, idx ->
+    String label = m.label as String
+    String handler = m.handler as String
+    String dni = "${device.id}-SSBTN-${idx+1}"
+    def child = getChildDevice(dni)
+
+    if (!child) {
+      try {
+        log.warn ">> Criando child [${idx+1}] '${label}' (handler=${handler}) DNI=${dni}"
+        child = addChildDevice(
+          "hubitat",
+          "Generic Component Switch",
+          dni,
+          [name: label, label: label, componentName: label, componentLabel: label, isComponent: true]
+        )
+        log.warn "   ✓ Child criado: ${child?.displayName ?: 'desconhecido'}"
+      } catch (e) {
+        log.error "   ✗ Falha ao criar child '${label}' (DNI=${dni}): ${e}", e
+      }
+    } else {
+      try { if (child.label != label) { child.setLabel(label); log.warn "   ↺ Label atualizado para '${label}'" } } catch (ignored) { }
+    }
+
+    if (child) {
+      try {
+        child.updateDataValue("handler", handler)
+        child.parse([[name:"switch", value:"off"]]) // estado inicial
+      } catch (ignored) { }
+      keep << dni
+    }
+  }
+
+  if (removeExtras) {
+    def extras = childDevices?.findAll { !(it.deviceNetworkId in keep) } ?: []
+    extras.each {
+      try { log.warn "Removendo child extra: ${it.displayName} (${it.deviceNetworkId})"; deleteChildDevice(it.deviceNetworkId) }
+      catch (e) { log.error "Falha ao remover child '${it.displayName}': ${e}", e }
+    }
+  }
+
+  log.warn "Concluído. Childs ativos: ${childDevices?.size() ?: 0}"
+}
+
+// Callbacks do 'Generic Component Switch'
+def componentOn(cd)  { handleChildPress(cd) }
+def componentOff(cd) { /* momentary: ignoramos o off manual; faremos auto-off */ }
+// Chamado pelo "Generic Component Switch" quando o usuário dá Refresh no child
+def componentRefresh(cd) {
+  // Como nossos childs são momentary, garantimos que o estado visual fique "off"
+  try {
+    cd.parse([[name:"switch", value:"off"]])
+  } catch (ignored) { }
+  if (logEnable) log.debug "componentRefresh() aplicado em '${cd?.displayName}'"
+}
+
+private void handleChildPress(cd) {
+  String handler = cd?.getDataValue("handler") ?: ""
+  log.debug "Press (ON) em '${cd?.displayName}' -> handler='${handler}'"
+  if (!handler) { log.warn "Child ${cd?.displayName} sem handler. Abortando."; return }
+
+  // Se o método não existir, ainda assim o child funciona como momentary e fazemos log:
+  def hasMethod = false
+  try { hasMethod = (this.metaClass?.getMetaMethod(handler) != null) || !(this.respondsTo(handler).isEmpty()) } catch (ignored) { }
+  if (!hasMethod) {
+    log.warn "Handler '${handler}' não encontrado neste driver. Verifique o nome do método."
+  } else {
+    try { this."${handler}"() }
+    catch (e) { log.error "Erro executando handler '${handler}': ${e}", e }
+  }
+
+  // auto-off em 1s
+  runIn(1, "childOffSafe", [data:[dni: cd?.deviceNetworkId], overwrite: true])
+}
+
+def childOffSafe(data) {
+  def child = data?.dni ? getChildDevice(data.dni as String) : null
+  if (child) {
+    try { child.parse([[name:"switch", value:"off"]]); log.debug "Auto-off enviado para '${child.displayName}'" } catch (ignored) { }
+  }
+}
+
+private void removeChildButtons() {
+  def toRemove = childDevices ?: []
+  log.warn "Removendo ${toRemove.size()} child(s) do SoundSmart..."
+  int removed = 0
+  toRemove.each { cd ->
+    try { deleteChildDevice(cd.deviceNetworkId); removed++ } catch (e) { log.error "Falha ao remover '${cd.displayName}': ${e}", e }
+  }
+  log.warn "Remoção concluída. Total removido: ${removed}"
+}
+
+
+
+// --- Helper seguro para converter hex em texto sem travar o driver ---
+private String safeHexToAscii(String hexStr) {
+    if (!hexStr) return ""
+    try {
+        return new String(hubitat.helper.HexUtils.hexStringToByteArray(hexStr))
+    } catch (Exception e) {
+        logDebug("safeHexToAscii() falhou ao converter '${hexStr.take(20)}...': ${e.message}")
+        return ""
+    }
+}
+
+
+def logsOff() {
+    log.warn "Desligando debug logging automaticamente para economizar memória."
+    device.updateSetting("logEnable", [value:"false", type:"bool"])
+}
+
+private void scheduleDebugAutoOff() {
+    if (logEnable) {
+        log.warn "Debug logging ativado — será desligado automaticamente em 30 minutos."
+        runIn(1800, "logsOff")   // 1800 segundos = 30 minutos
+    } else {
+        unschedule("logsOff")
+    }
+}
+
