@@ -41,7 +41,8 @@ Change history:
 					- Added display for Radio Station names when playing input from Streaming Radio Stations. 
 					- Added debug logs auto turn off. 
 
-
+2.1.7 - 21/01/2026  - Added Volume Control "Dimmer" Child. Used for integration with HomeKit and control volume as a Dimmer. 
+					- Added Mute/Unmute Switch. 
 
 NOTE: this structure was copied from @tomw
 
@@ -74,6 +75,12 @@ metadata
         command "push"
         command "recreateChilds"
         command "removeChilds"
+command "recreateVolumeDimmerChild"
+command "removeVolumeDimmerChild"
+command "recreateMuteToggleChild"
+command "removeMuteToggleChild"
+        
+        
         
         attribute "commStatus", "string"
         attribute "trackDescription", "string"
@@ -679,6 +686,9 @@ def updatePlayerStatus(useCachedValues)
     sendEvent(name: "level", value: resp_json.vol.toInteger())
     sendEvent(name: "volume", value: resp_json.vol.toInteger())
     sendEvent(name: "mute", value: (resp_json.mute.toInteger() ? "muted" : "unmuted"))
+	syncVolumeDimmerChild(resp_json.vol.toInteger())
+	syncMuteToggleChild((resp_json.mute.toInteger() ? "muted" : "unmuted"))
+    
     
     def tempStatus = ""
     switch(resp_json.status.toString())
@@ -1077,8 +1087,6 @@ void httpCmdGetCallback(resp, data) {
   [label:"SS - Stop",               handler:"stop"],
   [label:"SS - Next Track",         handler:"nextTrack"],
   [label:"SS - Previous Track",     handler:"previousTrack"],
-  [label:"SS - Mute",               handler:"mute"],
-  [label:"SS - Unmute",             handler:"unmute"],
 
   // Presets 1..10
   [label:"SS - Preset 1",           handler:"preset1"],
@@ -1115,6 +1123,13 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
   log.warn "Childs planejados: ${defs.size()}"
 
   Set<String> keep = [] as Set
+
+  // Mantém/atualiza o child dimmer de volume e garante que ele não seja removido como "extra"
+  createOrUpdateVolumeDimmerChild(false)
+  keep << "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+  // Mantém/atualiza o child switch de Mute/Unmute e garante que ele não seja removido como "extra"
+  createOrUpdateMuteToggleChild(false)
+  keep << "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
   defs.eachWithIndex { m, idx ->
     String label = m.label as String
     String handler = m.handler as String
@@ -1148,7 +1163,7 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
   }
 
   if (removeExtras) {
-    def extras = childDevices?.findAll { !(it.deviceNetworkId in keep) } ?: []
+    def extras = childDevices?.findAll { !(it.deviceNetworkId in keep) && !it.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX) && !it.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX) } ?: []
     extras.each {
       try { log.warn "Removendo child extra: ${it.displayName} (${it.deviceNetworkId})"; deleteChildDevice(it.deviceNetworkId) }
       catch (e) { log.error "Falha ao remover child '${it.displayName}': ${e}", e }
@@ -1159,8 +1174,41 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
 }
 
 // Callbacks do 'Generic Component Switch'
-def componentOn(cd)  { handleChildPress(cd) }
-def componentOff(cd) { /* momentary: ignoramos o off manual; faremos auto-off */ }
+def componentOn(cd)  {
+    // Mute Toggle: ON = mute
+    if (cd?.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX)) {
+        mute()
+        syncMuteToggleChild("muted")
+        return
+    }
+
+    // Volume Dimmer: ON = unmute
+    if (cd?.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX)) {
+        unmute()
+        return
+    }
+
+    // Switches momentary (botões)
+    handleChildPress(cd)
+}
+
+def componentOff(cd) {
+    // Mute Toggle: OFF = unmute
+    if (cd?.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX)) {
+        unmute()
+        syncMuteToggleChild("unmuted")
+        return
+    }
+
+    // Volume Dimmer: OFF = mute
+    if (cd?.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX)) {
+        mute()
+        return
+    }
+
+    // switches momentary: ignora
+}
+
 // Chamado pelo "Generic Component Switch" quando o usuário dá Refresh no child
 def componentRefresh(cd) {
   // Como nossos childs são momentary, garantimos que o estado visual fique "off"
@@ -1232,5 +1280,173 @@ private void scheduleDebugAutoOff() {
     } else {
         unschedule("logsOff")
     }
+}
+
+
+
+// --------------------
+// CHILD DIMMER (VOLUME) PARA HOMEKIT
+// --------------------
+@Field static final String SS_VOL_DIMMER_DNI_SUFFIX = "-SSVOL-1"
+@Field static final String SS_VOL_DIMMER_LABEL     = "SS - Volume (HomeKit)"
+
+def recreateVolumeDimmerChild() {
+    createOrUpdateVolumeDimmerChild(true)
+}
+
+def removeVolumeDimmerChild() {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (child) {
+        try {
+            log.warn "Removendo child dimmer: ${child.displayName} (${dni})"
+            deleteChildDevice(dni)
+        } catch (e) {
+            log.error "Falha ao remover child dimmer (${dni}): ${e}", e
+        }
+    } else {
+        log.warn "Child dimmer não existe (${dni})"
+    }
+}
+
+private void createOrUpdateVolumeDimmerChild(Boolean force=false) {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+
+    if (!child) {
+        try {
+            log.warn "Criando child dimmer de volume '${SS_VOL_DIMMER_LABEL}' DNI=${dni}"
+            child = addChildDevice(
+                "hubitat",
+                "Generic Component Dimmer",
+                dni,
+                [name: SS_VOL_DIMMER_LABEL, label: SS_VOL_DIMMER_LABEL,
+                 componentName: SS_VOL_DIMMER_LABEL, componentLabel: SS_VOL_DIMMER_LABEL,
+                 isComponent: true]
+            )
+            log.warn "✓ Child dimmer criado: ${child?.displayName}"
+        } catch (e) {
+            log.error "✗ Falha ao criar child dimmer (${dni}): ${e}", e
+            return
+        }
+    } else {
+        try {
+            if (child.label != SS_VOL_DIMMER_LABEL) child.setLabel(SS_VOL_DIMMER_LABEL)
+        } catch (ignored) {}
+        if (force) log.warn "Child dimmer já existe: ${child.displayName}"
+    }
+
+    // Seta estado inicial baseado no volume atual
+    try {
+        Integer v = device.currentValue("volume") as Integer
+        if (v == null) v = device.currentValue("level") as Integer
+        if (v == null) v = 0
+        v = Math.max(0, Math.min(100, v))
+        child.parse([[name:"level", value: v, unit:"%"], [name:"switch", value: (v > 0 ? "on":"off")]])
+    } catch (ignored) {}
+}
+
+/**
+ * Callback chamado pelo "Generic Component Dimmer" quando o slider muda
+ */
+def componentSetLevel(cd, level, duration=null) {
+    try {
+        Integer v = (level as Integer)
+        logDebug "componentSetLevel(${cd?.displayName}) -> ${v}"
+        setLevel(v)  // usa seu setLevel nativo (já faz vol e mute/unmute) :contentReference[oaicite:3]{index=3}
+    } catch (e) {
+        log.error "Erro em componentSetLevel: ${e}", e
+    }
+}
+
+/**
+ * Callback chamado pelo dimmer (ON/OFF)
+ * ON  -> unmute
+ * OFF -> mute
+ */
+
+
+/**
+ * Mantém o child dimmer sincronizado sempre que o volume for atualizado
+ * Chame isso no final do updatePlayerStatus()
+ */
+private void syncVolumeDimmerChild(Integer v) {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (!child) return
+    try {
+        v = Math.max(0, Math.min(100, v ?: 0))
+        child.parse([[name:"level", value: v, unit:"%"], [name:"switch", value: (v > 0 ? "on":"off")]])
+    } catch (ignored) {}
+}
+
+
+
+
+ // --------------------
+ // CHILD SWITCH (MUTE/UNMUTE) PARA HOMEKIT
+ // --------------------
+@Field static final String SS_MUTE_TOGGLE_DNI_SUFFIX = "-SSMUTE-1"
+@Field static final String SS_MUTE_TOGGLE_LABEL     = "SS- Mute/Umute"
+
+def recreateMuteToggleChild() {
+    createOrUpdateMuteToggleChild(true)
+}
+
+def removeMuteToggleChild() {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (child) {
+        try {
+            log.warn "Removendo child mute toggle: ${child.displayName} (${dni})"
+            deleteChildDevice(dni)
+        } catch (e) {
+            log.error "Falha ao remover child mute toggle (${dni}): ${e}", e
+        }
+    } else {
+        log.warn "Child mute toggle não existe (${dni})"
+    }
+}
+
+private void createOrUpdateMuteToggleChild(Boolean force=false) {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+
+    if (!child) {
+        try {
+            log.warn "Criando child mute toggle '${SS_MUTE_TOGGLE_LABEL}' DNI=${dni}"
+            child = addChildDevice(
+                "hubitat",
+                "Generic Component Switch",
+                dni,
+                [name: SS_MUTE_TOGGLE_LABEL, label: SS_MUTE_TOGGLE_LABEL,
+                 componentName: SS_MUTE_TOGGLE_LABEL, componentLabel: SS_MUTE_TOGGLE_LABEL,
+                 isComponent: true]
+            )
+            log.warn "✓ Child mute toggle criado: ${child?.displayName}"
+        } catch (e) {
+            log.error "✗ Falha ao criar child mute toggle (${dni}): ${e}", e
+            return
+        }
+    } else {
+        try { if (child.label != SS_MUTE_TOGGLE_LABEL) child.setLabel(SS_MUTE_TOGGLE_LABEL) } catch (ignored) { }
+        if (force) log.warn "Child mute toggle já existe: ${child.displayName}"
+    }
+
+    // Estado inicial baseado no atributo mute do parent ("muted" / "unmuted")
+    syncMuteToggleChild(device.currentValue("mute"))
+}
+
+private void syncMuteToggleChild(Object muteVal) {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (!child) return
+
+    String m = (muteVal ?: "").toString()
+    String sw = (m == "muted") ? "on" : "off"
+
+    try {
+        child.parse([[name:"switch", value: sw]])
+    } catch (ignored) {}
 }
 
