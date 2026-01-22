@@ -1,13 +1,11 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.1.6",
+ "version":"2.1.7",
  "minimumHEVersion":"2.3.7.100",
  "dateReleased":"2025-11-05",
- "releaseNotes":" - Added  Buttons as Child Devices using Recreate Buttons. Buttons shown as Switch, easier for dashboard use. 
-					- Changed to use asynchttp for some functions
-					- Added display for Radio Station names when playing input from Streaming Radio Stations. 
-					- Added debug logs auto turn off. ",
+ "releaseNotes": "- Added Dimmer  Child. Used for integration with HomeKit and control volume as a Dimmer. 
+					- Added Mute/Unmute Switch. ",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
