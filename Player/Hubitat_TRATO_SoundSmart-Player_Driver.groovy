@@ -44,6 +44,8 @@ Change history:
 2.1.7 - 21/01/2026  - Added Volume Control "Dimmer" Child. Used for integration with HomeKit and control volume as a Dimmer. 
 					- Added Mute/Unmute Switch. 
 
+2.1.8 - 18/02/2026  - Fixed to status "stopped" when in LineIn / Aux mode. 
+
 NOTE: this structure was copied from @tomw
 
 */
@@ -608,6 +610,10 @@ def inputaux()
 {
     logDebug("SoundSmart player change to Aux")    
     executeCommand("setPlayerCmd:switchmode:line-in")
+
+    // Hubitat dashboards/automations often interpret Line In as a non-streaming source.
+    // Force a consistent state right away.
+    sendEvent(name: "status", value: "stopped")
     
 }
 
@@ -706,6 +712,13 @@ def updatePlayerStatus(useCachedValues)
             tempStatus = "paused"
             break
     }        
+
+    // When the selected input is Line In (mode 40), force the player status to stopped.
+    // This avoids Hubitat apps/dashboards treating the Line In source as "playing".
+    if(resp_json.mode?.toString() == "40") {
+        tempStatus = "stopped"
+    }
+
     sendEvent(name: "status", value: tempStatus)
     
     //carga o input que está tocando
