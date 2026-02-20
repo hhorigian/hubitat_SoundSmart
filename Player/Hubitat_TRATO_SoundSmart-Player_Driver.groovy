@@ -36,10 +36,15 @@ Change history:
 2.1.3 - 16/08/2024  Added Shuffle Modes as buttons. 
 2.1.4 - 29/08/2024  New feature: Possible to send names in buttons instead of numbers in dashboard; ex: Button number: preset1. Will execute preset 1. Read.me for more instructions. 
 2.1.5 - 07/09/2024  Added Attributes LargeImage, URLImage
-2.1.6 - 05/11/2025  Added  Buttons as Child Devices using Recreate Buttons. Buttons shown as Switch, easier for dashboard use. 
-2.1.7 - 20/02/2026  Fixed Radio Online Cover and Name. 
+2.1.6 - 05/11/2025  - Added  Buttons as Child Devices using Recreate Buttons. Buttons shown as Switch, easier for dashboard use. 
+					- Changed to use asynchttp for some functions
+					- Added display for Radio Station names when playing input from Streaming Radio Stations. 
+					- Added debug logs auto turn off. 
 
+2.1.7 - 21/01/2026  - Added Volume Control "Dimmer" Child. Used for integration with HomeKit and control volume as a Dimmer. 
+					- Added Mute/Unmute Switch. 
 
+2.1.8 - 18/02/2026  - Fixed to status "stopped" when in LineIn / Aux mode. 
 
 NOTE: this structure was copied from @tomw
 
@@ -69,9 +74,15 @@ metadata
         command "inputbluetooth"
         command "inputaux"
         command "inputusb"
-        command "push_2"
+        command "push"
         command "recreateChilds"
         command "removeChilds"
+command "recreateVolumeDimmerChild"
+command "removeVolumeDimmerChild"
+command "recreateMuteToggleChild"
+command "removeMuteToggleChild"
+        
+        
         
         attribute "commStatus", "string"
         attribute "trackDescription", "string"
@@ -129,6 +140,8 @@ def installed()
     logDebug("SoundSmart player installed()")
     
     initialize()
+    scheduleDebugAutoOff()
+
 }
 
 def initialize()
@@ -145,6 +158,8 @@ def initialize()
     
     // set voice prompts behavior based on debugging state
     setVoicePromptsState()
+    scheduleDebugAutoOff()
+
 }
 
 def updated()
@@ -157,6 +172,8 @@ def updated()
     if (createButtonsOnSave) {
         createOrUpdateChildButtons(true)
     }
+    scheduleDebugAutoOff()
+
     
 }
 
@@ -593,6 +610,10 @@ def inputaux()
 {
     logDebug("SoundSmart player change to Aux")    
     executeCommand("setPlayerCmd:switchmode:line-in")
+
+    // Hubitat dashboards/automations often interpret Line In as a non-streaming source.
+    // Force a consistent state right away.
+    sendEvent(name: "status", value: "stopped")
     
 }
 
@@ -671,6 +692,9 @@ def updatePlayerStatus(useCachedValues)
     sendEvent(name: "level", value: resp_json.vol.toInteger())
     sendEvent(name: "volume", value: resp_json.vol.toInteger())
     sendEvent(name: "mute", value: (resp_json.mute.toInteger() ? "muted" : "unmuted"))
+	syncVolumeDimmerChild(resp_json.vol.toInteger())
+	syncMuteToggleChild((resp_json.mute.toInteger() ? "muted" : "unmuted"))
+    
     
     def tempStatus = ""
     switch(resp_json.status.toString())
@@ -688,6 +712,13 @@ def updatePlayerStatus(useCachedValues)
             tempStatus = "paused"
             break
     }        
+
+    // When the selected input is Line In (mode 40), force the player status to stopped.
+    // This avoids Hubitat apps/dashboards treating the Line In source as "playing".
+    if(resp_json.mode?.toString() == "40") {
+        tempStatus = "stopped"
+    }
+
     sendEvent(name: "status", value: tempStatus)
     
     //carga o input que está tocando
@@ -792,9 +823,6 @@ def updateUriAndDesc(useCachedValues)
     def tmpTitle = hexToAscii(getPlayerStatus().Title)
     def tmpArtist = hexToAscii(getPlayerStatus().Artist)
     def tmpAlbum = hexToAscii(getPlayerStatus().Album)
-    //log.info "tmpTitle = " + tmpTitle + " tmpArtist = " +  tmpArtist   + " tmpAlbum = " + tmpAlbum
-    //log.info "tmpTrackDesc_back = " + tmpTrackDesc_back + " tmpTrackDesc = " +  tmpTrackDesc
-    //log.info "getPlayerStatus().mode = " + getPlayerStatus().mode 
     
     
     //se a fonte é spotify e está tocando mando pegar o album  da música.
@@ -829,12 +857,42 @@ def updateUriAndDesc(useCachedValues)
 		sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
 		sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
         
-    } else if ((getPlayerStatus().mode == "10") && (getPlayerStatus().status == "play")){   //RADIO ONLINE
-        
-        def tmpTrackName = "<td> ${hexToAscii(getPlayerStatus().Title)}</td></tr></table>"  
-        sendEvent(name: "trackname", value: tmpTrackName)
-        
-    }else 
+    } 
+    // se a fonte é Radio Online (mode 10), mostra o nome da rádio e zera capas anteriores
+	else if (getPlayerStatus()?.mode == "10") {
+    // tenta pegar um nome útil da própria resposta do player
+    def rTitle  = safeHexToAscii(getPlayerStatus()?.Title)
+    def rArtist = safeHexToAscii(getPlayerStatus()?.Artist)
+    def rAlbum  = safeHexToAscii(getPlayerStatus()?.Album)
+
+    // tenta também no StatusEx (alguns firmwares expõem "StationName", "Station" ou "Title")
+    def st = getStatusEx()
+    def sxStation = st?.StationName ?: st?.Station ?: st?.Title ?: st?.RadioName
+
+    // escolhe a melhor fonte disponível
+    def station = [rTitle, rArtist, rAlbum, sxStation].find { it && it.trim() } ?: "Rádio Online"
+
+    tmpTrackData = "RADIO"
+    def tmpTrackDesc_temp = "<td>${station}</td></tr></table>"
+    def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td></td>"
+    def imgfileLarge = ""
+
+    tmpTrackDesc = imgfile + tmpTrackDesc_temp
+    tmpURLLargeCover = ""
+    tmpLargeCoverImg = ""
+
+    sendEvent(name: "trackData", value: tmpTrackData)
+    sendEvent(name: "trackDescription", value: tmpTrackDesc)
+    sendEvent(name: "trackname", value: "<td>${station}</td></tr></table>")
+    sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
+    sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
+
+    return // evita cair na lógica padrão que colocaria "N/A" e manteria capa anterior
+	}
+
+    
+    
+    else
     {
         tmpTrackData = "N/A"
     
@@ -842,6 +900,16 @@ def updateUriAndDesc(useCachedValues)
     
     
 }
+
+
+private String safeHexToAscii(Object hexStr) {
+    try {
+        return (hexStr ? hexToAscii(hexStr as String) : "") ?: ""
+    } catch (ignored) {
+        return ""
+    }
+}
+
 
 
 def updateIP(ip)
@@ -904,27 +972,35 @@ def parseJson(resp)
 }
      
 
-def httpGetExec(suffix)
-{
-    //logDebug("httpGetExec(${suffix})")
-    
-    try
-    {
-        getString = getBaseURI() + suffix
-        httpGet(getString.replaceAll(' ', '%20'))
-        { resp ->
-            if (resp.data)
-            {
-                //logDebug("resp.data = ${resp.data}")
-                return resp.data
+def httpGetExec(suffix) {
+    try {
+        String url = (getBaseURI() + suffix).replaceAll(' ', '%20')
+
+        // Mantém síncrono para consultas (getStatusEx, getPlayerStatus, etc.)
+        if (suffix?.toLowerCase()?.startsWith("get")) {
+            def ret = null         
+            logDebug("URL no httpget = " + url)
+            
+            httpGet(url) { resp ->
+                if (resp?.data) ret = resp.data?.toString()
             }
+            return ret
         }
+
+        // Usa ASYNC para COMANDOS (melhorando latência e não bloqueando o thread do driver)
+        Map params = [ uri: url, timeout: 7 ]
+        asynchttpGet('httpCmdGetCallback', params, [suffix: suffix])
+
+        // Retorna "true" para manter compatibilidade com trechos do tipo: if(httpGetExec(...)) { refresh() }
+            logDebug("URL no ASYNChttpget = " + url)
+        return true
     }
-    catch (Exception e)
-    {
+    catch (Exception e) {
         logDebug("httpGetExec() failed: ${e.message}")
+        return null
     }
 }
+
 
 
 def httpPOSTExec(URI)
@@ -991,6 +1067,21 @@ def httpPOSTExecLarge(URI)
     
 }
 
+void httpCmdGetCallback(resp, data) {
+    Integer st = null
+    try { st = resp?.status as Integer } catch (ignored) {}
+
+    String suf = data?.suffix ?: ""
+    if (st && st >= 200 && st < 300) {
+        if (logEnable) log.debug "HTTP CMD OK (${st}) -> ${suf}"
+        // Opcional: se quiser forçar um refresh após qualquer comando, descomente:
+        // refresh()
+    } else {
+        log.warn "HTTP CMD FAIL (status=${st}) -> ${suf}"
+    }
+}
+
+
 // --- CHILD SWITCHES: DEFINIÇÕES ---
 @Field static final List<Map> SS_CHILD_BUTTON_DEFS = [
   // Inputs
@@ -1009,8 +1100,6 @@ def httpPOSTExecLarge(URI)
   [label:"SS - Stop",               handler:"stop"],
   [label:"SS - Next Track",         handler:"nextTrack"],
   [label:"SS - Previous Track",     handler:"previousTrack"],
-  [label:"SS - Mute",               handler:"mute"],
-  [label:"SS - Unmute",             handler:"unmute"],
 
   // Presets 1..10
   [label:"SS - Preset 1",           handler:"preset1"],
@@ -1047,6 +1136,13 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
   log.warn "Childs planejados: ${defs.size()}"
 
   Set<String> keep = [] as Set
+
+  // Mantém/atualiza o child dimmer de volume e garante que ele não seja removido como "extra"
+  createOrUpdateVolumeDimmerChild(false)
+  keep << "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+  // Mantém/atualiza o child switch de Mute/Unmute e garante que ele não seja removido como "extra"
+  createOrUpdateMuteToggleChild(false)
+  keep << "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
   defs.eachWithIndex { m, idx ->
     String label = m.label as String
     String handler = m.handler as String
@@ -1080,7 +1176,7 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
   }
 
   if (removeExtras) {
-    def extras = childDevices?.findAll { !(it.deviceNetworkId in keep) } ?: []
+    def extras = childDevices?.findAll { !(it.deviceNetworkId in keep) && !it.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX) && !it.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX) } ?: []
     extras.each {
       try { log.warn "Removendo child extra: ${it.displayName} (${it.deviceNetworkId})"; deleteChildDevice(it.deviceNetworkId) }
       catch (e) { log.error "Falha ao remover child '${it.displayName}': ${e}", e }
@@ -1091,8 +1187,41 @@ private void createOrUpdateChildButtons(Boolean removeExtras=false) {
 }
 
 // Callbacks do 'Generic Component Switch'
-def componentOn(cd)  { handleChildPress(cd) }
-def componentOff(cd) { /* momentary: ignoramos o off manual; faremos auto-off */ }
+def componentOn(cd)  {
+    // Mute Toggle: ON = mute
+    if (cd?.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX)) {
+        mute()
+        syncMuteToggleChild("muted")
+        return
+    }
+
+    // Volume Dimmer: ON = unmute
+    if (cd?.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX)) {
+        unmute()
+        return
+    }
+
+    // Switches momentary (botões)
+    handleChildPress(cd)
+}
+
+def componentOff(cd) {
+    // Mute Toggle: OFF = unmute
+    if (cd?.deviceNetworkId?.endsWith(SS_MUTE_TOGGLE_DNI_SUFFIX)) {
+        unmute()
+        syncMuteToggleChild("unmuted")
+        return
+    }
+
+    // Volume Dimmer: OFF = mute
+    if (cd?.deviceNetworkId?.endsWith(SS_VOL_DIMMER_DNI_SUFFIX)) {
+        mute()
+        return
+    }
+
+    // switches momentary: ignora
+}
+
 // Chamado pelo "Generic Component Switch" quando o usuário dá Refresh no child
 def componentRefresh(cd) {
   // Como nossos childs são momentary, garantimos que o estado visual fique "off"
@@ -1136,4 +1265,200 @@ private void removeChildButtons() {
     try { deleteChildDevice(cd.deviceNetworkId); removed++ } catch (e) { log.error "Falha ao remover '${cd.displayName}': ${e}", e }
   }
   log.warn "Remoção concluída. Total removido: ${removed}"
+}
+
+
+
+// --- Helper seguro para converter hex em texto sem travar o driver ---
+private String safeHexToAscii(String hexStr) {
+    if (!hexStr) return ""
+    try {
+        return new String(hubitat.helper.HexUtils.hexStringToByteArray(hexStr))
+    } catch (Exception e) {
+        logDebug("safeHexToAscii() falhou ao converter '${hexStr.take(20)}...': ${e.message}")
+        return ""
+    }
+}
+
+
+def logsOff() {
+    log.warn "Desligando debug logging automaticamente para economizar memória."
+    device.updateSetting("logEnable", [value:"false", type:"bool"])
+}
+
+private void scheduleDebugAutoOff() {
+    if (logEnable) {
+        log.warn "Debug logging ativado — será desligado automaticamente em 30 minutos."
+        runIn(1800, "logsOff")   // 1800 segundos = 30 minutos
+    } else {
+        unschedule("logsOff")
+    }
+}
+
+
+
+// --------------------
+// CHILD DIMMER (VOLUME) PARA HOMEKIT
+// --------------------
+@Field static final String SS_VOL_DIMMER_DNI_SUFFIX = "-SSVOL-1"
+@Field static final String SS_VOL_DIMMER_LABEL     = "SS - Volume (HomeKit)"
+
+def recreateVolumeDimmerChild() {
+    createOrUpdateVolumeDimmerChild(true)
+}
+
+def removeVolumeDimmerChild() {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (child) {
+        try {
+            log.warn "Removendo child dimmer: ${child.displayName} (${dni})"
+            deleteChildDevice(dni)
+        } catch (e) {
+            log.error "Falha ao remover child dimmer (${dni}): ${e}", e
+        }
+    } else {
+        log.warn "Child dimmer não existe (${dni})"
+    }
+}
+
+private void createOrUpdateVolumeDimmerChild(Boolean force=false) {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+
+    if (!child) {
+        try {
+            log.warn "Criando child dimmer de volume '${SS_VOL_DIMMER_LABEL}' DNI=${dni}"
+            child = addChildDevice(
+                "hubitat",
+                "Generic Component Dimmer",
+                dni,
+                [name: SS_VOL_DIMMER_LABEL, label: SS_VOL_DIMMER_LABEL,
+                 componentName: SS_VOL_DIMMER_LABEL, componentLabel: SS_VOL_DIMMER_LABEL,
+                 isComponent: true]
+            )
+            log.warn "✓ Child dimmer criado: ${child?.displayName}"
+        } catch (e) {
+            log.error "✗ Falha ao criar child dimmer (${dni}): ${e}", e
+            return
+        }
+    } else {
+        try {
+            if (child.label != SS_VOL_DIMMER_LABEL) child.setLabel(SS_VOL_DIMMER_LABEL)
+        } catch (ignored) {}
+        if (force) log.warn "Child dimmer já existe: ${child.displayName}"
+    }
+
+    // Seta estado inicial baseado no volume atual
+    try {
+        Integer v = device.currentValue("volume") as Integer
+        if (v == null) v = device.currentValue("level") as Integer
+        if (v == null) v = 0
+        v = Math.max(0, Math.min(100, v))
+        child.parse([[name:"level", value: v, unit:"%"], [name:"switch", value: (v > 0 ? "on":"off")]])
+    } catch (ignored) {}
+}
+
+/**
+ * Callback chamado pelo "Generic Component Dimmer" quando o slider muda
+ */
+def componentSetLevel(cd, level, duration=null) {
+    try {
+        Integer v = (level as Integer)
+        logDebug "componentSetLevel(${cd?.displayName}) -> ${v}"
+        setLevel(v)  // usa seu setLevel nativo (já faz vol e mute/unmute) :contentReference[oaicite:3]{index=3}
+    } catch (e) {
+        log.error "Erro em componentSetLevel: ${e}", e
+    }
+}
+
+/**
+ * Callback chamado pelo dimmer (ON/OFF)
+ * ON  -> unmute
+ * OFF -> mute
+ */
+
+
+/**
+ * Mantém o child dimmer sincronizado sempre que o volume for atualizado
+ * Chame isso no final do updatePlayerStatus()
+ */
+private void syncVolumeDimmerChild(Integer v) {
+    String dni = "${device.id}${SS_VOL_DIMMER_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (!child) return
+    try {
+        v = Math.max(0, Math.min(100, v ?: 0))
+        child.parse([[name:"level", value: v, unit:"%"], [name:"switch", value: (v > 0 ? "on":"off")]])
+    } catch (ignored) {}
+}
+
+
+
+
+ // --------------------
+ // CHILD SWITCH (MUTE/UNMUTE) PARA HOMEKIT
+ // --------------------
+@Field static final String SS_MUTE_TOGGLE_DNI_SUFFIX = "-SSMUTE-1"
+@Field static final String SS_MUTE_TOGGLE_LABEL     = "SS- Mute/Umute"
+
+def recreateMuteToggleChild() {
+    createOrUpdateMuteToggleChild(true)
+}
+
+def removeMuteToggleChild() {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (child) {
+        try {
+            log.warn "Removendo child mute toggle: ${child.displayName} (${dni})"
+            deleteChildDevice(dni)
+        } catch (e) {
+            log.error "Falha ao remover child mute toggle (${dni}): ${e}", e
+        }
+    } else {
+        log.warn "Child mute toggle não existe (${dni})"
+    }
+}
+
+private void createOrUpdateMuteToggleChild(Boolean force=false) {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+
+    if (!child) {
+        try {
+            log.warn "Criando child mute toggle '${SS_MUTE_TOGGLE_LABEL}' DNI=${dni}"
+            child = addChildDevice(
+                "hubitat",
+                "Generic Component Switch",
+                dni,
+                [name: SS_MUTE_TOGGLE_LABEL, label: SS_MUTE_TOGGLE_LABEL,
+                 componentName: SS_MUTE_TOGGLE_LABEL, componentLabel: SS_MUTE_TOGGLE_LABEL,
+                 isComponent: true]
+            )
+            log.warn "✓ Child mute toggle criado: ${child?.displayName}"
+        } catch (e) {
+            log.error "✗ Falha ao criar child mute toggle (${dni}): ${e}", e
+            return
+        }
+    } else {
+        try { if (child.label != SS_MUTE_TOGGLE_LABEL) child.setLabel(SS_MUTE_TOGGLE_LABEL) } catch (ignored) { }
+        if (force) log.warn "Child mute toggle já existe: ${child.displayName}"
+    }
+
+    // Estado inicial baseado no atributo mute do parent ("muted" / "unmuted")
+    syncMuteToggleChild(device.currentValue("mute"))
+}
+
+private void syncMuteToggleChild(Object muteVal) {
+    String dni = "${device.id}${SS_MUTE_TOGGLE_DNI_SUFFIX}"
+    def child = getChildDevice(dni)
+    if (!child) return
+
+    String m = (muteVal ?: "").toString()
+    String sw = (m == "muted") ? "on" : "off"
+
+    try {
+        child.parse([[name:"switch", value: sw]])
+    } catch (ignored) {}
 }
