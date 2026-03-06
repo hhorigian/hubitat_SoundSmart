@@ -1,9 +1,9 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.1.8",
+ "version":"2.1.9",
  "minimumHEVersion":"2.3.7.100",
- "dateReleased":"2026-2-18",
+ "dateReleased":"2026-3-06",
  "releaseNotes": "Fixed status to stopped when LineIn selected.",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
