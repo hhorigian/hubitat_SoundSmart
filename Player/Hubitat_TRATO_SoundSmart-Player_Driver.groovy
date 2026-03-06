@@ -45,6 +45,7 @@ Change history:
 					- Added Mute/Unmute Switch. 
 
 2.1.8 - 18/02/2026  - Fixed to status "stopped" when in LineIn / Aux mode. 
+2.1.9 - 06/03/2026  - Show IP Address as variable state. 
 
 NOTE: this structure was copied from @tomw
 
@@ -93,6 +94,7 @@ command "removeMuteToggleChild"
 		attribute "ImageLargeCover", "string"		
 		attribute "ImageLargeCover", "string"		
         attribute "trackname", "string"
+        attribute "ipAddress", "string"
 
 
     }
@@ -159,7 +161,7 @@ def initialize()
     // set voice prompts behavior based on debugging state
     setVoicePromptsState()
     scheduleDebugAutoOff()
-
+	syncIpAddressState()
 }
 
 def updated()
@@ -173,7 +175,8 @@ def updated()
         createOrUpdateChildButtons(true)
     }
     scheduleDebugAutoOff()
-
+ 
+    syncIpAddressState()
     
 }
 
@@ -225,6 +228,10 @@ def uninstalled()
     logDebug("SoundSmart player uninstalled()")
     
     unschedule()
+}
+
+private void syncIpAddressState() {
+    sendEvent(name: "ipAddress", value: (IP_address ?: ""))
 }
 
 
