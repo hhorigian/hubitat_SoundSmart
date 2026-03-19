@@ -46,6 +46,7 @@ Change history:
 
 2.1.8 - 18/02/2026  - Fixed to status "stopped" when in LineIn / Aux mode. 
 2.1.9 - 06/03/2026  - Show IP Address as variable state. 
+2.2.0 - 18/03/2026  - Added MakerAPi fixes, and added TuneIn playstation. 
 
 NOTE: this structure was copied from @tomw
 
@@ -82,6 +83,7 @@ command "recreateVolumeDimmerChild"
 command "removeVolumeDimmerChild"
 command "recreateMuteToggleChild"
 command "removeMuteToggleChild"
+command "playTuneInStation", ["stationId"]
         
         
         
@@ -128,6 +130,141 @@ preferences
     
     
 }
+
+def playTuneInStation(stationId)
+{
+    logDebug("SoundSmart player playTuneInStation(${stationId})")
+
+    state.lastTuneInStationId = normalizeTuneInStationId(stationId)
+
+    def tuneInUrl = "http://opml.radiotime.com/Tune.ashx?id=${state.lastTuneInStationId}"
+    playTrack(tuneInUrl)
+}
+
+
+private String normalizeTuneInStationId(Object stationId) {
+    String sid = (stationId ?: "").toString().trim()
+    if (!sid) return ""
+    if (!sid.toLowerCase().startsWith("s")) sid = "s${sid}"
+    return sid
+}
+
+private Map getTuneInStationMeta(Object stationId) {
+    String sid = normalizeTuneInStationId(stationId)
+    if (!sid) return null
+
+    String url = "https://opml.radiotime.com/describe.ashx?id=${sid}&render=json"
+    logDebug("TuneIn describe URL = ${url}")
+
+    try {
+        def parsed = null
+
+        httpGet(url) { resp ->
+            if (resp?.data instanceof Map) {
+                parsed = resp.data
+            } else if (resp?.data) {
+                parsed = new groovy.json.JsonSlurper().parseText(resp.data.toString())
+            } else if (resp?.getData()) {
+                def d = resp.getData()
+                parsed = (d instanceof Map) ? d : new groovy.json.JsonSlurper().parseText(d.toString())
+            }
+        }
+
+        if (!(parsed instanceof Map)) {
+            logDebug("getTuneInStationMeta: resposta vazia ou inválida")
+            return null
+        }
+
+        // Alguns retornos vêm em body[0], outros podem vir em head / children / outline
+        def candidates = []
+
+        if (parsed?.body instanceof List) {
+            candidates.addAll(parsed.body)
+        }
+        if (parsed?.head instanceof Map) {
+            candidates << parsed.head
+        }
+        if (parsed?.outline instanceof List) {
+            candidates.addAll(parsed.outline)
+        }
+
+        // Se algum body item tiver children/outline, também vasculha
+        def nested = []
+        candidates.each { item ->
+            if (item instanceof Map) {
+                if (item?.children instanceof List) nested.addAll(item.children)
+                if (item?.outline instanceof List)  nested.addAll(item.outline)
+            }
+        }
+        candidates.addAll(nested)
+
+        def best = candidates.find { item ->
+            item instanceof Map && (
+                item?.guide_id?.toString() == sid ||
+                item?.preset_id?.toString() == sid ||
+                item?.station_id?.toString() == sid ||
+                item?.image ||
+                item?.logo ||
+                item?.text ||
+                item?.subtext ||
+                item?.name ||
+                item?.title
+            )
+        }
+
+        if (!(best instanceof Map)) {
+            logDebug("getTuneInStationMeta: nenhum item útil encontrado")
+            return [
+                name: null,
+                logo: buildTuneInLogoUrl(sid),
+                id  : sid
+            ]
+        }
+
+        String name =
+            best?.text?.toString()?.trim() ?:
+            best?.subtext?.toString()?.trim() ?:
+            best?.name?.toString()?.trim() ?:
+            best?.title?.toString()?.trim() ?:
+            best?.current_track?.toString()?.trim() ?:
+            null
+
+        String logo =
+            best?.image?.toString()?.trim() ?:
+            best?.logo?.toString()?.trim() ?:
+            buildTuneInLogoUrl(sid)
+
+        String foundId =
+            best?.guide_id?.toString()?.trim() ?:
+            best?.preset_id?.toString()?.trim() ?:
+            best?.station_id?.toString()?.trim() ?:
+            sid
+
+        def result = [
+            name: name,
+            logo: logo,
+            id  : foundId
+        ]
+
+        logDebug("getTuneInStationMeta result = ${result}")
+        return result
+
+    } catch (e) {
+        logDebug("getTuneInStationMeta error: ${e.message}")
+        return [
+            name: null,
+            logo: buildTuneInLogoUrl(sid),
+            id  : sid
+        ]
+    }
+}
+
+private String buildTuneInLogoUrl(Object stationId) {
+    String sid = normalizeTuneInStationId(stationId)
+    if (!sid) return ""
+    return "http://cdn-profiles.tunein.com/${sid}/images/logoq.jpg"
+}
+
 
 def logDebug(msg) 
 {
@@ -865,38 +1002,61 @@ def updateUriAndDesc(useCachedValues)
 		sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
         
     } 
-    // se a fonte é Radio Online (mode 10), mostra o nome da rádio e zera capas anteriores
-	else if (getPlayerStatus()?.mode == "10") {
-    // tenta pegar um nome útil da própria resposta do player
+ // se a fonte é Radio Online (mode 10), tenta mostrar logo da TuneIn
+else if (getPlayerStatus()?.mode == "10") {
     def rTitle  = safeHexToAscii(getPlayerStatus()?.Title)
     def rArtist = safeHexToAscii(getPlayerStatus()?.Artist)
     def rAlbum  = safeHexToAscii(getPlayerStatus()?.Album)
 
-    // tenta também no StatusEx (alguns firmwares expõem "StationName", "Station" ou "Title")
     def st = getStatusEx()
     def sxStation = st?.StationName ?: st?.Station ?: st?.Title ?: st?.RadioName
 
-    // escolhe a melhor fonte disponível
-    def station = [rTitle, rArtist, rAlbum, sxStation].find { it && it.trim() } ?: "Rádio Online"
+    String tuneInStationId = normalizeTuneInStationId(state.lastTuneInStationId)
+    Map tuneInMeta = tuneInStationId ? getTuneInStationMeta(tuneInStationId) : null
+
+    // prioriza nome vindo do TuneIn; se não existir, usa metadata local
+    String station =
+        tuneInMeta?.name?.toString()?.trim() ?:
+        rTitle?.toString()?.trim() ?:
+        sxStation?.toString()?.trim() ?:
+        rArtist?.toString()?.trim() ?:
+        rAlbum?.toString()?.trim() ?:
+        "Rádio Online"
+
+    String tuneInLogoUrl =
+        tuneInMeta?.logo?.toString()?.trim() ?:
+        buildTuneInLogoUrl(tuneInStationId)
+
+    def hasLogo = tuneInLogoUrl?.trim()
 
     tmpTrackData = "RADIO"
     def tmpTrackDesc_temp = "<td>${station}</td></tr></table>"
-    def imgfile = "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td></td>"
-    def imgfileLarge = ""
 
+    def imgfile = hasLogo
+        ? "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td><img src='${tuneInLogoUrl}'></td>"
+        : "<table style='border-collapse: collapse;margin-left: auto; margin-right: auto;border='0'><tr><td></td>"
+
+    def imgfileLarge = hasLogo
+        ? "<img src='${tuneInLogoUrl}' style='width:365px;'>"
+        : ""
+
+    
     tmpTrackDesc = imgfile + tmpTrackDesc_temp
-    tmpURLLargeCover = ""
-    tmpLargeCoverImg = ""
+    tmpURLLargeCover = hasLogo ? tuneInLogoUrl : ""
+    tmpLargeCoverImg = imgfileLarge
 
     sendEvent(name: "trackData", value: tmpTrackData)
     sendEvent(name: "trackDescription", value: tmpTrackDesc)
-    sendEvent(name: "trackname", value: "<td>${station}</td></tr></table>")
+    sendEvent(name: "trackname", value: station)
     sendEvent(name: "URLLargeCoverFile", value: tmpURLLargeCover)
     sendEvent(name: "ImageLargeCover", value: tmpLargeCoverImg)
 
-    return // evita cair na lógica padrão que colocaria "N/A" e manteria capa anterior
-	}
+    state.currentTuneInStation = tuneInMeta ?: [name: null, logo: tuneInLogoUrl, id: tuneInStationId]
+    state.SmallAlbumCover = hasLogo ? tuneInLogoUrl : ""
+    state.LargeAlbumCover = hasLogo ? tuneInLogoUrl : ""
 
+    return
+}
     
     
     else
