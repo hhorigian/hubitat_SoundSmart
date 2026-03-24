@@ -114,6 +114,7 @@ preferences
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         input name: "UserGuide", type: "hidden", title: fmtHelpInfo("Manual do Driver") 
         input name: "createButtonsOnSave", type: "bool", title: "Criar/atualizar Child Switches para botões ao salvar", defaultValue: false
+        input name: "refreshInterval", type: "number", title: "Refresh interval (seconds)", defaultValue: 8, range: "2..60"
     }
 }
 
@@ -307,7 +308,7 @@ def refresh(useCachedValues)
     updatePlayerStatus(useCachedValues)
     updateUriAndDesc(true)
     
-    runIn(8, refresh)
+    runIn((refreshInterval ?: 8) as Integer, refresh)
 }
 
 def uninstalled()
