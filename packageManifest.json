@@ -1,10 +1,10 @@
 {
  "packageName":"SoundSmart - Player Drivers",
  "author":"Vartan Horigian",
- "version":"2.2.1",
+ "version":"2.2.3",
  "minimumHEVersion":"2.3.7.100",
- "dateReleased":"2026-3-21",
- "releaseNotes": "Fixes for refresh. ",
+ "dateReleased":"2026-05-04",
+ "releaseNotes": "v2.2.2: Radio album cover now loads when station is started via physical preset (no TuneIn ID). Added search fallback by station name. v2.2.3: Fixed cover and station name not updating after preset change via API — detects title change and reloads station metadata automatically.",
  "documentationLink":"https://github.com/hhorigian/hubitat_SoundSmart/tree/main/Player",
  "drivers": [
   {
