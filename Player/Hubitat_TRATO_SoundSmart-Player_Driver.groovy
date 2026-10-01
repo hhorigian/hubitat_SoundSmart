@@ -50,6 +50,7 @@ Change history:
 2.2.1 - 4/052026  - Removed Table formatting for tracknames.
 2.2.2 - 4/05/2026 - Added TuneIn search fallback for radio logo when station was started via physical preset (no lastTuneInStationId).
 2.2.3 - 4/05/2026 - Fixed: station name/cover not updating after preset change via API. Now detects Title change and clears cached station ID.
+2.2.4 - 01/10/2026 - Fixed: compile error (metaClass not allowed in Hubitat sandbox) in handleChildPress, which broke setVolume and other commands.
 
 
 NOTE: this structure was copied from @tomw
@@ -1466,14 +1467,10 @@ private void handleChildPress(cd) {
   if (!handler) { log.warn "Child ${cd?.displayName} sem handler. Abortando."; return }
 
   // Se o método não existir, ainda assim o child funciona como momentary e fazemos log:
-  def hasMethod = false
-  try { hasMethod = (this.metaClass?.getMetaMethod(handler) != null) || !(this.respondsTo(handler).isEmpty()) } catch (ignored) { }
-  if (!hasMethod) {
-    log.warn "Handler '${handler}' não encontrado neste driver. Verifique o nome do método."
-  } else {
-    try { this."${handler}"() }
-    catch (e) { log.error "Erro executando handler '${handler}': ${e}", e }
-  }
+  // (metaClass não é permitido no sandbox da Hubitat; tentamos chamar direto e tratamos a ausência do método)
+  try { this."${handler}"() }
+  catch (MissingMethodException e) { log.warn "Handler '${handler}' não encontrado neste driver. Verifique o nome do método." }
+  catch (e) { log.error "Erro executando handler '${handler}': ${e}" }
 
   // auto-off em 1s
   runIn(1, "childOffSafe", [data:[dni: cd?.deviceNetworkId], overwrite: true])
